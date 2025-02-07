@@ -24,3 +24,8 @@ https://huggingface.co/meta-llama/Meta-Llama-3-8B
 ## Use Cases
 Students will work on language learning activies on terminals in a lab that access the lanague learning program on VMs running Windows.  They will be able to access the app thru Edge browswer.
 
+## Security
+Initially probably not the best - anyone with access can log in, but if the access is kept within the school intranet at least one would have to be on that network to access.
+Kids' scores and performance evaluations for the various activities can be considered personal information and so a small retainment period should be enforced since there really is no authentication to access.
+No identifable information other than a students name should be stored - (i.e no bdays, pins, anything!)
+
