@@ -42,7 +42,7 @@ Here are examples of user input and assistant output, pay attention to the score
     <score>10</score>
     <score_reasons> 
     - GOOD: Doesn't provide verbose text at the start, and shows vocabulary immediatly 
-    - GOOD: Shows conceptual sentence strucutre 
+    - GOOD: Shows conceptual sentence structure
     - GOOD: Clues don't give away any of the tense of conjugations
     </score_reasons> 
     <assistant:output>
@@ -72,12 +72,4 @@ Here are examples of user input and assistant output, pay attention to the score
     </assistant:output>
 </example>
 
-
-
-
-
-
-
-
-## Student Input
-Bears are at the door, did you leave the garbage out?
+Student Input: Bears are at the door, did you leave the garbage out?
