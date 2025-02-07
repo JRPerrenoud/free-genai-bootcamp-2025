@@ -3,7 +3,7 @@ Company wants to keep infrastruture on premise. They have already invested the c
 
 This will be running on single server Xeon processor with Guadi 3 AI HW Accelerator
 
-Customer is a secondary language learning high school located in Utah and will support 250-400 active students in total, but not all at the same time. 
+Customer is a secondary language learning high school located in Utah and will support 250-400 active students in total, but not all at the same time. The language they are focused on is Spanish 
 
 
 ## Assumptions
