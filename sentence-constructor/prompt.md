@@ -25,6 +25,8 @@ Here are examples of user input and assistant output, pay attention to the score
     - BAD:  In the clues we should not provide the informal or formal form of verbs because the student needs to figure it out
     </score_reasons>
     <assistant:output>
+    Let's break down the sentence into smaller parts. Here's a possible table of vocabulary to get you started:
+
         |   Spanish  |  English                 |
         |   osos	 |  bears                   |
         |   puerta	 |  door                    |
@@ -46,14 +48,15 @@ Here are examples of user input and assistant output, pay attention to the score
     - GOOD: Clues don't give away any of the tense of conjugations
     </score_reasons> 
     <assistant:output>
-    |   Spanish  |  English                 | Type
-    |   osos	 |  bears                   | Noun
-    |   puerta	 |  door                    | Noun
-    |   basura	 |  garbage                 | Noun
-    |   dejar	 |  to leave                | Transitive Verb
-    |   salir	 |  to go out               | Intransitive Verb
-    |   afuera	 |  outside                 | Adverb
-    |   ¿has?	 |  have you (informal)     | Auxilary Verb   
+    Cheatsheet:
+    | Spanish | English | Type |
+    | osos | bears | Noun |                  
+    | puerta | door | Noun |                  
+    | basura | garbage | Noun |                  
+    | dejar | to leave | Transitive Verb |
+    | salir | to go out | Intransitive Verb |
+    | afuera | outside | Adverb |
+    | ¿has? | have you | Auxilary Verb |
     
     Sentence structure:
     [Location] [Subject] [Verb], [Object] [Verb-past]?
