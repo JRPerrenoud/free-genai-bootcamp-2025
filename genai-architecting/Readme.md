@@ -5,9 +5,8 @@ This will be running on single server Xeon processor with Guadi 3 AI HW Accelera
 
 Customer is a secondary language learning high school located in Utah and will support 250-400 active students in total, but not all at the same time. The language they are focused on is Spanish 
 
-
 ## Assumptions
-Open-source LLMs should be powerful enough to run on their HW.
+Their HW should be powerful enough to run these Open-source LLMs 
 
 Budget allocated to purchase copyrighted materiel **should** be enough
 
