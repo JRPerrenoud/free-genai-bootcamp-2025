@@ -50,13 +50,14 @@ Here are examples of user input and assistant output, pay attention to the score
     <assistant:output>
     Cheatsheet:
     | Spanish | English | Type |
-    | osos | bears | Noun |                  
-    | puerta | door | Noun |                  
-    | basura | garbage | Noun |                  
-    | dejar | to leave | Transitive Verb |
-    | salir | to go out | Intransitive Verb |
-    | afuera | outside | Adverb |
-    | ¿has? | have you | Auxilary Verb |
+    |---------|---------|------|
+    | osos    | bears   | Noun |
+    | puerta  | door    | Noun |
+    | basura  | garbage | Noun |
+    | dejar   | to leave| Transitive Verb |
+    | salir   | to go out| Intransitive Verb |
+    | afuera  | outside | Adverb |
+    | ¿has?   | have you| Auxiliary Verb |
     
     Sentence structure:
     [Location] [Subject] [Verb], [Object] [Verb-past]?
