@@ -18,6 +18,8 @@ A language learning school wants to build a prototype of learning portal which w
 
 ## Database Schema
 
+Our database will be a single sqlite database called `words.db` that will be in the root of the project folder of 'lang_portal_go'.
+
 We have the following tables:
 - words - stored vocabulary words
     - id integer
@@ -399,5 +401,42 @@ This endpoint will update the review status of a word in a study session
     "correct": true,
     "created_at": "2025-02-12T11:10:14-07:00"    
 }
+```
+
+
+## Mage Tasks
+Mage is a task runner for Go.
+Let's list out possible tasks we need to run for our lang portal
+
+
+### Initialize Database
+This task will initialize the sqlite database called `words.db` 
+
+### Migrate Database
+This task will run a series of migrations sql files on the database
+
+Migrations live in the 'migration' folder.
+The migration files will be run in order of their file name.
+The file names should look like this:
+```sql
+0001_init.sql
+0002_create_table_groups.sql
+```
+
+### Seed Data
+This task will import json files and transform them into target data for our database.
+
+All seed files live in the 'seeds' folder.
+All seed files should be loaded.
+
+In our task we should have a DSL to specify each seed file and its expected group word name.
+
+```json
+{
+  "spanish": "pagar",      
+  "english": "to pay",    
+}
+  ...
+]
 ```
 
