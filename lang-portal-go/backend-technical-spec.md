@@ -60,9 +60,23 @@ many-to-many
 - GET /api/dashboard/quick-states
 - GET /api/study_activities/:id
 - GET /api/study_activities/:id/study_sessions
+- POST /api/study_activities/
+     - required params:  group_id, study_activity_id 
+- GET /api/words/ 
+    - pagination with 100 items per page
 - GET /api/words
 - GET /api/words/:id
 - GET /api/groups
+    - pagination with 100 items per page
 - GET /api/groups/:id
 - GET /api/groups/:id/words
+- GET /api/groups/:id/study_sessions
+- GET /api/study_sessions/
+- GET /api/study_sessions/:id
+- GET /api/study_sessions/:id/words
+- POST /api/reset_history
+- POST /api/full_reset
+- POST /api/study_sessions/:id/words:word_id/review
+    - required params: correct
+
 
