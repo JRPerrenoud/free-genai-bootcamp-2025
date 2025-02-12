@@ -432,6 +432,7 @@ All seed files should be loaded.
 In our task we should have a DSL to specify each seed file and its expected group word name.
 
 ```json
+[
 {
   "spanish": "pagar",      
   "english": "to pay",    
