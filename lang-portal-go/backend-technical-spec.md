@@ -9,7 +9,7 @@ A language learning school wants to build a prototype of learning portal which w
 
 ## Technical Requirements
 
-- The backend will be built using Flask
+- The backend will be built using Go
 - The database will be SQLite3
 - The API will be built using Gin
 - The API will always return JSON
