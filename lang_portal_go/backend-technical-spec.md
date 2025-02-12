@@ -12,6 +12,7 @@ A language learning school wants to build a prototype of learning portal which w
 - The backend will be built using Go
 - The database will be SQLite3
 - The API will be built using Gin
+- Mage is a task runner for Go.
 - The API will always return JSON
 - There will be no authentication or authorization
 - Everything will be treated as single user
@@ -404,7 +405,7 @@ This endpoint will update the review status of a word in a study session
 ```
 
 
-## Mage Tasks
+## Task Runner Tasks
 Mage is a task runner for Go.
 Let's list out possible tasks we need to run for our lang portal
 
