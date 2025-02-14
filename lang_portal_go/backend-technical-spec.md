@@ -1,119 +1,226 @@
-# Backend Server Technical Spec. 
+# Backend Server Technical Spec
 
 ## Business Goal
 
-A language learning school wants to build a prototype of learning portal which will act as three things:
-- Inventory of possible vocabulary that can be learned
-- Act as a learning record store (LRS), proving correct and wrong score on practive vocabulary
-- A unified launchpad to launch different learning apps
+A language learning school wants to build a prototype learning portal that serves three main purposes:
+1. Maintain an inventory of vocabulary words that can be learned
+2. Act as a Learning Record Store (LRS), tracking correct and incorrect responses during vocabulary practice
+3. Provide a unified platform for launching different learning activities
 
 ## Technical Requirements
 
-- The backend will be built using Go
-- The database will be SQLite3
-- The API will be built using Gin
-- Mage is a task runner for Go.
-- The API will always return JSON
-- There will be no authentication or authorization
-- Everything will be treated as single user
-
+- Backend Framework: Go with Gin web framework
+- Database: SQLite3 (file: `words.db`)
+- Task Runner: Mage for database management and server operations
+- API Format: JSON responses with standardized success/error format
+- Authentication: None (single-user application)
+- Response Format:
+  ```json
+  {
+    "success": true,
+    "data": {
+      // Response data here
+    }
+  }
+  ```
+  or for errors:
+  ```json
+  {
+    "success": false,
+    "error": "Error message here"
+  }
+  ```
+- Pagination: Default 20 items per page where applicable
 
 ## Directory Structure
+
 ```text
 lang_portal_go/
 ├── cmd/
-│   └── server/
+│   ├── server/        # Main web server application
+│   ├── init_db/       # Database initialization with CLI flags
+│   ├── initdb/        # Simple database initialization
+│   └── seed/          # Database seeding utility
 ├── internal/
-│   ├── models/         # Data Structures and database operations
-│   ├── handlers/       # HTTP handlers organized by feature (dashboard, words, groups, etc)
-│   └── services/       # Business logic
+│   ├── models/        # Data structures and database operations
+│   ├── handlers/      # HTTP handlers organized by feature
+│   ├── seeder/        # Seeding logic and data loading
+│   └── services/      # Business logic
 ├── db/
-│   ├── migrations/     # Database migrations
-│   └── seeds/          # For Initial data population
-├── magefile.go
-├── go.mod
-└── words.db
+│   ├── migrations/    # Database schema and migrations
+│   └── seeds/         # Initial data for seeding
+├── magefile.go        # Task runner configuration
+├── go.mod            # Go module definition
+├── go.sum            # Go module checksums
+└── words.db         # SQLite database file
+```
 
 ## Database Schema
 
-Our database will be a single sqlite database called `words.db` that will be in the root of the project folder of 'lang_portal_go'.
+The application uses SQLite as its database. The schema is defined in `db/migrations/001_initial_schema.sql`.
 
-We have the following tables:
-- words - stored vocabulary words
-    - id integer
-    - spanish string
-    - english string
-    - parts json
+### Tables
 
-- words_groups - join table for words and groups
-many-to-many
-    - id integer
-    - word_id integer
-    - group_id integer
-    
-- groups - thematic groups of words
-    -id integer
-    - name string
+#### words
+Stores vocabulary words with their translations and part of speech.
+```sql
+CREATE TABLE IF NOT EXISTS words (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    spanish TEXT NOT NULL,
+    english TEXT NOT NULL,
+    part_of_speech TEXT NOT NULL
+);
+```
 
-- study_sessions - records of study sessions grouping word_review_items
-    - id integer
-    - group_id integer
-    - created_at datetime
-    - study_activity_id integer
-    
-- study_activities - a specific study activity, linking study session to group
-    - id integer
-    - study_session_id integar
-    - group_id integer
-    - created_at datetime
+#### groups
+Stores word groups/categories.
+```sql
+CREATE TABLE IF NOT EXISTS groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT
+);
+```
 
-- word_review_items - a record of word practice, determining if the word was correct or not
-    - word_id integer
-    - study_session_id integer
-    - correct boolean
-    - created_at datetime
+#### word_groups
+Join table connecting words to their groups.
+```sql
+CREATE TABLE IF NOT EXISTS word_groups (
+    word_id INTEGER NOT NULL,
+    group_id INTEGER NOT NULL,
+    PRIMARY KEY (word_id, group_id),
+    FOREIGN KEY (word_id) REFERENCES words(id),
+    FOREIGN KEY (group_id) REFERENCES groups(id)
+);
+```
 
+#### study_activities
+Stores different types of study activities (e.g., flashcards, quizzes).
+```sql
+CREATE TABLE IF NOT EXISTS study_activities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### study_sessions
+Records individual study sessions for specific groups and activities.
+```sql
+CREATE TABLE IF NOT EXISTS study_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER NOT NULL,
+    study_activity_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_id) REFERENCES groups(id),
+    FOREIGN KEY (study_activity_id) REFERENCES study_activities(id)
+);
+```
+
+#### word_review_items
+Records individual word reviews during study sessions.
+```sql
+CREATE TABLE IF NOT EXISTS word_review_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    word_id INTEGER NOT NULL,
+    study_session_id INTEGER NOT NULL,
+    correct BOOLEAN NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (word_id) REFERENCES words(id),
+    FOREIGN KEY (study_session_id) REFERENCES study_sessions(id)
+);
+```
+
+### Performance Indices
+
+The following indices are created to optimize query performance:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_word_groups_word_id ON word_groups(word_id);
+CREATE INDEX IF NOT EXISTS idx_word_groups_group_id ON word_groups(group_id);
+CREATE INDEX IF NOT EXISTS idx_study_sessions_group_id ON study_sessions(group_id);
+CREATE INDEX IF NOT EXISTS idx_study_sessions_activity_id ON study_sessions(study_activity_id);
+CREATE INDEX IF NOT EXISTS idx_word_review_items_word_id ON word_review_items(word_id);
+CREATE INDEX IF NOT EXISTS idx_word_review_items_session_id ON word_review_items(study_session_id);
+```
+
+These indices improve performance for:
+- Looking up words in a group
+- Looking up groups for a word
+- Finding study sessions for a group or activity
+- Retrieving word review history
 
 ## API Endpoints
 
-### GET /api/dashboard/last_study_session
-
-#### JSON Response
-Returns information about the most recent study session.
+All API responses follow this standard format:
 ```json
 {
-    "id": 123,
-    "group_id": 456,
-    "created_at": "2025-02-12T11:10:14-07:00",
-    "study_activity_id": 789,
-    "group_id": 456,
-     "group_name": "Math"
+    "success": boolean,
+    "data": object (optional),
+    "error": string (optional)
 }
 ```
 
-### GET /api/dashboard/study_progress
-Returns study progress.
+For endpoints that return paginated data, the response data will follow this format:
+```json
+{
+    "items": array,
+    "current_page": integer,
+    "total_pages": integer,
+    "total_items": integer,
+    "items_per_page": integer
+}
+```
+
+### Dashboard Endpoints
+
+#### GET /api/dashboard/last_study_session
+Returns information about the most recent study session.
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 123,
+        "group_id": 456,
+        "created_at": "2025-02-12T11:10:14-07:00",
+        "study_activity_id": 789,
+        "group_name": "Math"
+    }
+}
+```
+
+#### GET /api/dashboard/study_progress
+Returns study progress information.
 Please note that the frontend will determine progress by based on total words studied and total available words.
 
+
 #### JSON Response
 ```json
 {
-    "total_words_studied": 500,
-    "total_available_words": 1000   
+    "success": true,
+    "data": {
+        "total_words_studied": 500,
+        "total_available_words": 1000
+    }
 }
 ```
 
-
-### GET /api/dashboard/quick-states
+#### GET /api/dashboard/quick-stats
 Returns quick overview statistics.
 
 #### JSON Response
 ```json
 {
-    "total_words": 1000,
-    "total_groups": 10,
-    "total_study_sessions": 25,
-    "overall_accuracy": 0.8
+    "success": true,
+    "data": {
+        "total_words": 1000,
+        "total_groups": 10,
+        "total_study_sessions": 25,
+        "overall_accuracy": 0.8
+    }
 }
 ```
 
@@ -171,70 +278,238 @@ Pagination of study sessions (20 per page)
 }
 ```
 
-### GET /api/words/ 
-Pagination with 100 items per page
+### Word Endpoints
+
+#### GET /api/words
+Returns a paginated list of words. Default page size is 20 items.
+
+Query Parameters:
+- `page`: Page number (default: 1)
+- `page_size`: Number of items per page (default: 20)
+- `group_id`: Optional, filter words by group ID
 
 #### JSON Response
 ```json
 {
-    "items": [
-     {
-        "spanish": "hola",
-        "english": "hello",
-        "correct_count": 10,
-        "wrong_count": 5,
-        "parts": ["Noun"]
-     }
-    ],
-    "pagination": {
+    "success": true,
+    "data": {
+        "items": [
+            {
+                "id": 1,
+                "spanish": "hola",
+                "english": "hello",
+                "part_of_speech": "interjection"
+            }
+        ],
         "current_page": 1,
         "total_pages": 10,
         "total_items": 100,
-        "items_per_page": 100
+        "items_per_page": 20
     }
 }
 ```
 
-### GET /api/words:id
-This endpoint will return a list of words
+#### GET /api/words/:id
+Returns details for a specific word including study statistics.
 
 #### JSON Response
 ```json
 {
-    "spanish": "casa",
-    "english": "house",
-    "study_statistics": {
-        "correct_count": 8,
-        "wrong_count": 2
-    },
-    "groups": [
-     {
-        "id": 1,
-        "name": "Basic Vocabulary"
-     }
-   ]
+    "success": true,
+    "data": {
+        "word": {
+            "id": 1,
+            "spanish": "hola",
+            "english": "hello",
+            "part_of_speech": "interjection"
+        },
+        "study_stats": {
+            "total_reviews": 10,
+            "correct_reviews": 8
+        }
+    }
 }
 ```
 
+#### POST /api/words
+Creates a new word.
 
-### GET /api/groups
-Pagination with 100 items per page
+#### Request Body
+```json
+{
+    "spanish": "hola",
+    "english": "hello",
+    "part_of_speech": "interjection"
+}
+```
 
 #### JSON Response
 ```json
 {
-    "items": [
-     {
+    "success": true,
+    "data": {
+        "id": 1,
+        "spanish": "hola",
+        "english": "hello",
+        "part_of_speech": "interjection"
+    }
+}
+```
+
+#### PUT /api/words/:id
+Updates an existing word.
+
+#### Request Body
+```json
+{
+    "spanish": "hola",
+    "english": "hello",
+    "part_of_speech": "interjection"
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "spanish": "hola",
+        "english": "hello",
+        "part_of_speech": "interjection"
+    }
+}
+```
+
+#### DELETE /api/words/:id
+Deletes a word.
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "message": "Word deleted successfully"
+    }
+}
+```
+
+### Group Endpoints
+
+#### GET /api/groups/:id
+Returns details for a specific group including its words.
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "group": {
+            "id": 1,
+            "name": "Basic Vocabulary",
+            "description": "Essential everyday words"
+        },
+        "words": [
+            {
+                "id": 1,
+                "spanish": "hola",
+                "english": "hello",
+                "part_of_speech": "interjection"
+            }
+        ],
+        "total_words": 25
+    }
+}
+```
+
+#### POST /api/groups
+Creates a new group.
+
+#### Request Body
+```json
+{
+    "name": "Basic Vocabulary",
+    "description": "Essential everyday words"
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
         "id": 1,
         "name": "Basic Vocabulary",
-        "word_count": 100
-     }
-    ],
-    "pagination": {
-      "current_page": 1,
-      "total_pages": 1,
-      "total_items": 100,
-      "items_per_page": 100
+        "description": "Essential everyday words"
+    }
+}
+```
+
+#### PUT /api/groups/:id
+Updates an existing group.
+
+#### Request Body
+```json
+{
+    "name": "Basic Vocabulary",
+    "description": "Essential everyday words"
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "name": "Basic Vocabulary",
+        "description": "Essential everyday words"
+    }
+}
+```
+
+#### DELETE /api/groups/:id
+Deletes a group.
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "message": "Group deleted successfully"
+    }
+}
+```
+
+#### POST /api/groups/:id/words
+Adds a word to a group.
+
+#### Request Body
+```json
+{
+    "word_id": 1
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "message": "Word added to group successfully"
+    }
+}
+```
+
+#### DELETE /api/groups/:id/words/:word_id
+Removes a word from a group.
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "message": "Word removed from group successfully"
     }
 }
 ```
@@ -422,40 +697,255 @@ This endpoint will update the review status of a word in a study session
 ```
 
 
-## Task Runner Tasks
-Mage is a task runner for Go.
-Let's list out possible tasks we need to run for our lang portal
+### Study Activity Endpoints
 
+#### GET /api/study-activities
+Returns a paginated list of study activities. Default page size is 20 items.
 
-### Initialize Database
-This task will initialize the sqlite database called `words.db` 
+Query Parameters:
+- `page`: Page number (default: 1)
+- `page_size`: Number of items per page (default: 20)
 
-### Migrate Database
-This task will run a series of migrations sql files on the database
-
-Migrations live in the 'migration' folder.
-The migration files will be run in order of their file name.
-The file names should look like this:
-```sql
-0001_init.sql
-0002_create_table_groups.sql
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "items": [
+            {
+                "id": 1,
+                "name": "Flashcards",
+                "description": "Basic flashcard review",
+                "created_at": "2025-02-13T21:20:34-07:00"
+            }
+        ],
+        "current_page": 1,
+        "total_pages": 5,
+        "total_items": 100,
+        "items_per_page": 20
+    }
+}
 ```
 
-### Seed Data
-This task will import json files and transform them into target data for our database.
+#### GET /api/study-activities/:id
+Returns details for a specific study activity.
 
-All seed files live in the 'seeds' folder.
-All seed files should be loaded.
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "name": "Flashcards",
+        "description": "Basic flashcard review",
+        "created_at": "2025-02-13T21:20:34-07:00"
+    }
+}
+```
 
-In our task we should have a DSL to specify each seed file and its expected group word name.
+#### POST /api/study-activities
+Creates a new study activity.
+
+#### Request Body
+```json
+{
+    "name": "Flashcards",
+    "description": "Basic flashcard review"
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "name": "Flashcards",
+        "description": "Basic flashcard review",
+        "created_at": "2025-02-13T21:20:34-07:00"
+    }
+}
+```
+
+#### PUT /api/study-activities/:id
+Updates an existing study activity.
+
+#### Request Body
+```json
+{
+    "name": "Flashcards",
+    "description": "Basic flashcard review"
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "name": "Flashcards",
+        "description": "Basic flashcard review",
+        "created_at": "2025-02-13T21:20:34-07:00"
+    }
+}
+```
+
+#### DELETE /api/study-activities/:id
+Deletes a study activity.
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "message": "Study activity deleted successfully"
+    }
+}
+```
+
+#### GET /api/study-activities/:id/sessions
+Returns a paginated list of study sessions for a specific activity.
+
+Query Parameters:
+- `page`: Page number (default: 1)
+- `page_size`: Number of items per page (default: 20)
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "items": [
+            {
+                "id": 1,
+                "group_id": 1,
+                "group_name": "Basic Vocabulary",
+                "study_activity_id": 1,
+                "created_at": "2025-02-13T21:20:34-07:00"
+            }
+        ],
+        "current_page": 1,
+        "total_pages": 5,
+        "total_items": 100,
+        "items_per_page": 20
+    }
+}
+```
+
+#### POST /api/study-activities/:id/sessions
+Starts a new study session for an activity.
+
+#### Request Body
+```json
+{
+    "group_id": 1
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "group_id": 1,
+        "group_name": "Basic Vocabulary",
+        "study_activity_id": 1,
+        "created_at": "2025-02-13T21:20:34-07:00"
+    }
+}
+```
+
+#### POST /api/study-sessions/:session_id/results
+Records a study result for a session.
+
+#### Request Body
+```json
+{
+    "word_id": 1,
+    "correct": true
+}
+```
+
+#### JSON Response
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "word_id": 1,
+        "study_session_id": 1,
+        "correct": true,
+        "created_at": "2025-02-13T21:20:34-07:00"
+    }
+}
+```
+
+## Task Runner Tasks
+
+The application uses [Mage](https://magefile.org/) as its task runner. Here are the available tasks:
+
+### Database Tasks (namespace: `db`)
+
+#### `mage db:init`
+Initializes a new SQLite database using the schema defined in `db/migrations/001_initial_schema.sql`.
+
+#### `mage db:clean`
+Removes the existing database file (`words.db`).
+
+#### `mage db:seed`
+Populates the database with initial data using the seeding utility in `cmd/seed/main.go`.
+
+#### `mage db:reset`
+Performs a complete database reset by running the following tasks in sequence:
+1. `db:clean` - Removes existing database
+2. `db:init` - Initializes new database
+3. `db:seed` - Seeds with initial data
+
+### Server Tasks (namespace: `server`)
+
+#### `mage server:start`
+Starts the application server by running `cmd/server/main.go`.
+
+### Default Task
+
+When running `mage` without any target, it defaults to `db:init`.
+
+### Seed Data Format
+
+The seed data is stored in `db/seeds/initial_data.json` using the following format:
 
 ```json
-[
 {
-  "spanish": "pagar",      
-  "english": "to pay",    
+    "groups": [
+        {
+            "name": "Basic Greetings",
+            "description": "Common greetings and introductions in Spanish"
+        },
+        {
+            "name": "Numbers 1-20",
+            "description": "Basic numbers in Spanish"
+        }
+    ],
+    "words": [
+        {
+            "spanish": "hola",
+            "english": "hello",
+            "part_of_speech": "interjection",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "gracias",
+            "english": "thank you",
+            "part_of_speech": "interjection",
+            "group_names": ["Basic Greetings"]
+        }
+    ]
 }
-  ...
-]
 ```
 
+The seeder will:
+1. Create the groups first
+2. Create the words
+3. Establish the word-group relationships based on the `group_names` array

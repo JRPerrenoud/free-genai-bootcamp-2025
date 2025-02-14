@@ -1,11 +1,265 @@
 # Frontend Technical Spec
 
+## Business Goal
+
+A single-page web application that provides:
+1. An intuitive dashboard for tracking learning progress
+2. Easy access to vocabulary management
+3. Interactive study activities
+4. Detailed progress tracking and statistics
+
+## Technical Requirements
+
+- Framework: React with TypeScript
+- UI Library: Material-UI (MUI)
+- State Management: React Query for server state
+- Routing: React Router v6
+- Build Tool: Vite
+- Code Style: ESLint + Prettier
+- Testing: Jest + React Testing Library
+
+## Project Structure
+```text
+lang_portal_frontend/
+├── src/
+│   ├── components/     # Reusable UI components
+│   │   ├── common/    # Shared components (buttons, cards, etc.)
+│   │   ├── dashboard/ # Dashboard-specific components
+│   │   ├── study/     # Study activity components
+│   │   └── words/     # Word management components
+│   ├── hooks/         # Custom React hooks
+│   ├── pages/         # Page components
+│   ├── services/      # API integration
+│   ├── types/         # TypeScript definitions
+│   └── utils/         # Helper functions
+├── public/            # Static assets
+├── tests/            # Test files
+├── package.json
+└── vite.config.ts
+```
+
+## Pages and Components
+
+### Dashboard Page (`/dashboard`)
+
+#### Purpose
+Provides a summary of learning progress and quick access to study activities.
+
+#### Components
+- **LastStudySession**
+  - Activity name and timestamp
+  - Performance summary (correct/incorrect)
+  - Link to detailed session view
+
+- **StudyProgress**
+  - Overall progress (words studied/total)
+  - Progress visualization
+  - Breakdown by groups
+
+- **QuickStats**
+  ```typescript
+  interface QuickStats {
+    successRate: number;     // Percentage
+    totalSessions: number;   // Count
+    activeGroups: number;    // Count
+    studyStreak: number;     // Days
+  }
+  ```
+
+- **StartStudyButton**
+  - Primary action button
+  - Routes to study activities
+
+#### API Integration
+```typescript
+// Last study session
+GET /api/dashboard/last_study_session
+Response: {
+  success: true,
+  data: {
+    activity_name: string,
+    timestamp: string,
+    correct_count: number,
+    total_count: number,
+    group_id: number,
+    group_name: string
+  }
+}
+
+// Study progress
+GET /api/dashboard/study_progress
+Response: {
+  success: true,
+  data: {
+    total_words: number,
+    studied_words: number,
+    group_progress: Array<{
+      group_id: number,
+      group_name: string,
+      studied: number,
+      total: number
+    }>
+  }
+}
+```
+
+### Study Activities Page (`/study-activities`)
+
+#### Purpose
+Displays available study activities and launches study sessions.
+
+#### Components
+- **ActivityCard**
+  ```typescript
+  interface ActivityCard {
+    id: number;
+    name: string;
+    description: string;
+    thumbnail: string;
+    onLaunch: () => void;
+    onView: () => void;
+  }
+  ```
+
+- **ActivityList**
+  - Grid layout of ActivityCards
+  - Pagination support
+
+#### API Integration
+```typescript
+GET /api/study-activities
+Response: {
+  success: true,
+  data: {
+    items: Array<{
+      id: number,
+      name: string,
+      description: string,
+      created_at: string
+    }>,
+    current_page: number,
+    total_pages: number,
+    total_items: number,
+    items_per_page: number
+  }
+}
+```
+
+### Word Management Pages
+
+#### Words List (`/words`)
+- Paginated table of words
+- Search and filter functionality
+- Quick stats for each word
+
+#### Word Details (`/words/:id`)
+- Word information
+- Study statistics
+- Group associations
+- Edit functionality
+
+#### Groups List (`/groups`)
+- Paginated table of word groups
+- Word count per group
+- Quick actions
+
+#### Group Details (`/groups/:id`)
+- Group information
+- Word list within group
+- Study session history
+- Management actions
+
+## Shared Components
+
+### Data Display
+- **PaginatedTable**
+  ```typescript
+  interface PaginatedTableProps<T> {
+    data: T[];
+    columns: Column[];
+    page: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  }
+  ```
+
+- **StatCard**
+  ```typescript
+  interface StatCardProps {
+    title: string;
+    value: number | string;
+    icon?: React.ReactNode;
+    trend?: number;
+  }
+  ```
+
+### User Input
+- **SearchBar**
+- **FilterSelect**
+- **GroupSelector**
+
+### Feedback
+- **LoadingSpinner**
+- **ErrorMessage**
+- **SuccessMessage**
+
+## State Management
+
+### Server State
+- Use React Query for API data
+- Implement optimistic updates
+- Cache invalidation strategies
+
+### Local State
+- Form state with React Hook Form
+- UI state with React context
+- URL state with React Router
+
+## Error Handling
+
+### API Errors
+```typescript
+interface ApiError {
+  success: false;
+  error: string;
+}
+```
+
+### Error Boundaries
+- Implement for each major section
+- Fallback UI components
+- Error reporting integration
+
+## Performance Considerations
+
+1. Implement virtualization for long lists
+2. Lazy load components and routes
+3. Optimize images and assets
+4. Cache API responses
+5. Debounce search inputs
+
+## Accessibility
+
+1. ARIA labels and roles
+2. Keyboard navigation
+3. Color contrast compliance
+4. Screen reader support
+5. Focus management
+
+## Testing Strategy
+
+1. Unit tests for utilities and hooks
+2. Component tests with React Testing Library
+3. Integration tests for pages
+4. E2E tests for critical flows
+5. Accessibility tests
+
 ## Pages
 
 ### Dashboard Index '/dashboard'
 
 #### Purpose
-The purpse of this page is to provide a summary of learning and act as the summary page when user visits webapp
+The purpose of this page is to provide a summary of learning and act as the summary page when user visits webapp
 
 #### Components
 - Last Study Session
@@ -230,5 +484,3 @@ The purpose of this page is to make configurations to the study portal webapp
 #### Needed API Endpoints
 - POST /api/reset_history
 - POST /api/full_reset
-
-
