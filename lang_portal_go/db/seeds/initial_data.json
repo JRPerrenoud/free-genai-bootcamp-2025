@@ -1,0 +1,80 @@
+{
+    "groups": [
+        {
+            "name": "Basic Greetings",
+            "description": "Common greetings and introductions in Spanish"
+        },
+        {
+            "name": "Numbers 1-20",
+            "description": "Basic numbers in Spanish"
+        },
+        {
+            "name": "Common Verbs",
+            "description": "Most frequently used Spanish verbs"
+        }
+    ],
+    "words": [
+        {
+            "spanish": "hola",
+            "english": "hello",
+            "part_of_speech": "interjection",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "gracias",
+            "english": "thank you",
+            "part_of_speech": "interjection",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "por favor",
+            "english": "please",
+            "part_of_speech": "phrase",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "uno",
+            "english": "one",
+            "part_of_speech": "number",
+            "group_names": ["Numbers 1-20"]
+        },
+        {
+            "spanish": "dos",
+            "english": "two",
+            "part_of_speech": "number",
+            "group_names": ["Numbers 1-20"]
+        },
+        {
+            "spanish": "ser",
+            "english": "to be (permanent)",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "estar",
+            "english": "to be (temporary)",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "ir",
+            "english": "to go",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        }
+    ],
+    "study_activities": [
+        {
+            "name": "Flashcards",
+            "description": "Practice vocabulary using flashcards"
+        },
+        {
+            "name": "Multiple Choice",
+            "description": "Choose the correct translation from options"
+        },
+        {
+            "name": "Writing Practice",
+            "description": "Write the translation of given words"
+        }
+    ]
+}
