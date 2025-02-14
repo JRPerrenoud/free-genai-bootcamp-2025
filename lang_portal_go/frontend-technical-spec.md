@@ -1,3 +1,4 @@
+
 # Frontend Technical Spec
 
 ## Business Goal
@@ -10,13 +11,11 @@ A single-page web application that provides:
 
 ## Technical Requirements
 
-- Framework: React with TypeScript
-- UI Library: Material-UI (MUI)
-- State Management: React Query for server state
-- Routing: React Router v6
-- Build Tool: Vite
-- Code Style: ESLint + Prettier
-- Testing: Jest + React Testing Library
+- React.js as the frontend library
+- Tailwind CSS as the css framework
+- Vite.js as the local development server
+- TypeScript as the programming language
+- ShadCN for components
 
 ## Project Structure
 ```text
