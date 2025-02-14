@@ -1,0 +1,182 @@
+{
+    "groups": [
+        {
+            "name": "Basic Greetings",
+            "description": "Common greetings and introductions in Spanish"
+        },
+        {
+            "name": "Numbers 1-20",
+            "description": "Basic numbers in Spanish"
+        },
+        {
+            "name": "Common Verbs",
+            "description": "Most frequently used Spanish verbs"
+        },
+        {
+            "name": "Food and Drinks",
+            "description": "Common food and beverage vocabulary"
+        },
+        {
+            "name": "Family Members",
+            "description": "Words for family relationships"
+        }
+    ],
+    "words": [
+        {
+            "spanish": "hola",
+            "english": "hello",
+            "part_of_speech": "interjection",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "gracias",
+            "english": "thank you",
+            "part_of_speech": "interjection",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "por favor",
+            "english": "please",
+            "part_of_speech": "phrase",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "buenos días",
+            "english": "good morning",
+            "part_of_speech": "phrase",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "buenas noches",
+            "english": "good night",
+            "part_of_speech": "phrase",
+            "group_names": ["Basic Greetings"]
+        },
+        {
+            "spanish": "uno",
+            "english": "one",
+            "part_of_speech": "number",
+            "group_names": ["Numbers 1-20"]
+        },
+        {
+            "spanish": "dos",
+            "english": "two",
+            "part_of_speech": "number",
+            "group_names": ["Numbers 1-20"]
+        },
+        {
+            "spanish": "tres",
+            "english": "three",
+            "part_of_speech": "number",
+            "group_names": ["Numbers 1-20"]
+        },
+        {
+            "spanish": "cuatro",
+            "english": "four",
+            "part_of_speech": "number",
+            "group_names": ["Numbers 1-20"]
+        },
+        {
+            "spanish": "cinco",
+            "english": "five",
+            "part_of_speech": "number",
+            "group_names": ["Numbers 1-20"]
+        },
+        {
+            "spanish": "ser",
+            "english": "to be (permanent)",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "estar",
+            "english": "to be (temporary)",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "ir",
+            "english": "to go",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "tener",
+            "english": "to have",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "hacer",
+            "english": "to do/make",
+            "part_of_speech": "verb",
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "pan",
+            "english": "bread",
+            "part_of_speech": "noun",
+            "group_names": ["Food and Drinks"]
+        },
+        {
+            "spanish": "agua",
+            "english": "water",
+            "part_of_speech": "noun",
+            "group_names": ["Food and Drinks"]
+        },
+        {
+            "spanish": "leche",
+            "english": "milk",
+            "part_of_speech": "noun",
+            "group_names": ["Food and Drinks"]
+        },
+        {
+            "spanish": "café",
+            "english": "coffee",
+            "part_of_speech": "noun",
+            "group_names": ["Food and Drinks"]
+        },
+        {
+            "spanish": "madre",
+            "english": "mother",
+            "part_of_speech": "noun",
+            "group_names": ["Family Members"]
+        },
+        {
+            "spanish": "padre",
+            "english": "father",
+            "part_of_speech": "noun",
+            "group_names": ["Family Members"]
+        },
+        {
+            "spanish": "hermano",
+            "english": "brother",
+            "part_of_speech": "noun",
+            "group_names": ["Family Members"]
+        },
+        {
+            "spanish": "hermana",
+            "english": "sister",
+            "part_of_speech": "noun",
+            "group_names": ["Family Members"]
+        }
+    ],
+    "study_activities": [
+        {
+            "name": "Flashcards",
+            "description": "Practice vocabulary using flashcards"
+        },
+        {
+            "name": "Multiple Choice",
+            "description": "Choose the correct translation from options"
+        },
+        {
+            "name": "Writing Practice",
+            "description": "Write the translation of given words"
+        },
+        {
+            "name": "Word Groups",
+            "description": "Practice words within specific categories"
+        }
+    ]
+}
