@@ -171,8 +171,6 @@ Returns quick overview statistics.
 ```
 
 
-
-
 ### Study Activity Endpoints
 
 #### GET /api/study_activities
@@ -204,7 +202,7 @@ Query Parameters:
 ```
 
 #### GET /api/study_activities/:id
-Returns details of a study activity.
+Returns details of a study activity including all of its past sessions
 
 #### JSON Response
 ```json
@@ -230,6 +228,29 @@ Returns details of a study activity.
 }
 ```
 
+#### GET /api/study_activities/:id/sessions
+Returns a paginated list of study sessions for a specific study activity. Default page size is 20 items.
+
+Query Parameters:
+- activity_id: ID of the study activity
+
+
+#### JSON Response
+```json
+{
+    "sessions": [
+        {
+            "study_session_id": 1,
+            "activity_name": "Vocabulary Quiz",
+            "group_name": "Core Verbs",
+            "start_time": "2025-02-12T11:10:14-07:00",
+            "end_time": "2025-02-12T11:25:14-07:00",
+            "review_items_count": 20
+        }
+    ]
+}
+```
+
 ### POST /api/study_activities/
 
 #### Request Params
@@ -238,7 +259,8 @@ Returns details of a study activity.
 #### JSON Response
 ```json
 {
-   "activity_id": 123 
+   "group_id": 123,
+   "activity_id": 456 
 }
 ```
 #### JSON Response
@@ -251,166 +273,6 @@ Returns details of a study activity.
 }
 ```
 
-
-
-
-
-
-
-
-
-### Sessions Endpoints
-
-#### GET /api/study_sessions/:id
-This endpoint will return a single study session
-
-#### JSON Response
-```json
-{
-    "study_session_id": 789,
-    "activity_name": "Vocabulary Quiz",
-    "group_name": "Core Verbs",
-    "start_time": "2025-02-12T11:10:14-07:00",    
-    "review_items_count": 10
-    "words_reviewed": [
-     {
-        "word_id": 1,
-        "spanish": "hola",
-        "english": "hello",
-        "correct": true        
-    }
-    ],
-}
-```
-
-### GET /api/study_sessions/
-This endpoint will return a list of study sessions
-
-#### JSON Response
-```json
-{
-    "items": [
-     {
-        "session_id": 789,
-        "activity_name": "Vocabulary Quiz",
-        "group_name": "Core Verbs",
-        "start_time": "2025-02-12T11:10:14-07:00",
-        "end_time": "2025-02-12T11:25:14-07:00",
-        "review_items_count": 20        
-     }
-    ],
-    "pagination": {
-        "current_page": 1,
-        "total_pages": 5,
-        "total_items": 100,
-        "items_per_page": 20
-    }
-}
-```
-
-
-### GET /api/study_sessions/:id/words
-This endpoint will return all of the words used in a specific study session
-
-#### JSON Response
-```json
-{
-    "items": [
-     {
-        "spanish": "hola",
-        "english": "hello",
-        "correct_count": 10,
-        "wrong_count": 5,
-        "parts": ["Noun"]
-     }
-    ],
-    "pagination": {
-        "current_page": 1,
-        "total_pages": 10,
-        "total_items": 100,
-        "items_per_page": 100
-    }
-}
-```
-
-### POST /api/study_sessions/:id/words:word_id/review
-This endpoint will update the review status of a word in a study session
-
-#### Request Params
-- id (study_session_id) integer
-- word_id (word_id) integer
-- correct boolean
-
-
-#### Request Payload
-```json
-{
-    "session_id": 789,
-    "word_id": 123,
-    "correct": true
-}
-```
-#### JSON Response
-```json
-{
-    "success": true,
-    "word_id": 123,
-    "study_session_id": 789,
-    "correct": true,
-    "created_at": "2025-02-12T11:10:14-07:00"    
-}
-```
-
-
-#### POST /api/study_activities/:id/sessions
-Starts a new study session for an activity.
-(study_activities/:id/launch)
-
-#### Request Body
-```json
-{
-    "activity_id": 1
-}
-```
-
-#### JSON Response
-```json
-{
-    "success": true,
-    "data": {
-        "study_session_id": 1,
-        "activity_id": 1,
-               
-        "created_at": "2025-02-13T21:20:34-07:00",
-        "end_time": null
-    }
-}
-```
-
-#### POST /api/study_activities/:id/sessions/:session_id/results
-Records a study result for a session.
-
-#### Request Body
-```json
-{
-    "word_id": 1,
-    "correct": true
-}
-```
-
-#### JSON Response
-```json
-{
-    "success": true,
-    "message": "Word result added successfully",
-    "word": {
-        "word_id": 1,
-        "study_session_id": 1,
-        "correct": true,
-        "created_at": "2025-02-13T21:20:34-07:00"
-    }
-}
-```
 ### Word Endpoints
 
 #### GET /api/words
@@ -534,9 +396,30 @@ Deletes a word.
 }
 ```
 
-
-
 ### Group Endpoints
+
+#### Get /api/groups/
+Returns a list of all groups.
+
+#### JSON Response
+```json
+{
+    "items": [
+     {
+        "group_name_id": 1,
+        "group_name": "Common Verbs",
+        "total_words": 100       
+     }
+    ],
+    "pagination": {
+        "current_page": 1,
+        "total_pages": 5,
+        "total_items": 100,
+        "items_per_page": 20
+    }
+}
+```
+
 
 #### GET /api/groups/:id
 Returns details for a specific group including its words.
@@ -548,43 +431,18 @@ Returns details for a specific group including its words.
     "data": {
         "group": {
             "group_name_id": 1,
-            "group_name": "interjection"            
+            "group_name": "Interjection",
+            "total_words": 25
         },
         "words": [
             {
                 "word_id": 1,
                 "spanish": "hola",
                 "english": "hello",
-                "group_name": "interjection"
+                "correct_count": 10,
+                "wrong_count": 5                
             }
-        ],
-        "total_words": 25
-    }
-}
-```
-
-
-#### GET /api/groups/:id/study_sessions
-This endpoint will return a list of study sessions in a group
-
-#### JSON Response
-```json
-{
-    "items": [
-     {
-        "session_id": 789,
-        "activity_name": "Typing Tudor",
-        "group_name": "Core Verbs",
-        "start_time": "2025-02-12T11:10:14-07:00",
-        "end_time": "2025-02-12T11:25:14-07:00",
-        "review_items_count": 20
-     }
-    ],
-    "pagination": {
-        "current_page": 1,
-        "total_pages": 1,
-        "total_items": 5,
-        "items_per_page": 100
+        ],        
     }
 }
 ```
@@ -678,6 +536,72 @@ Removes a word from a group.
 ```
 
 
+
+
+### Sessions Endpoints
+
+#### GET /api/study_sessions/
+This endpoint will return a list of study sessions in our database
+
+#### JSON Response
+```json
+{
+    "items": [
+     {
+        "session_id": 789,
+        "activity_name": "Vocabulary Quiz",
+        "group_name": "Core Verbs",
+        "start_time": "2025-02-12T11:10:14-07:00",
+        "end_time": "2025-02-12T11:25:14-07:00",
+        "review_items_count": 20        
+     }
+    ],
+    "pagination": {
+        "current_page": 1,
+        "total_pages": 5,
+        "total_items": 100,
+        "items_per_page": 20
+    }
+}
+```
+
+#### GET /api/study_sessions/:id
+This endpoint will return a single study session
+
+#### JSON Response
+```json
+{
+    "study_session_id": 789,
+    "activity_name": "Vocabulary Quiz",
+    "group_name": "Core Verbs",
+    "start_time": "2025-02-12T11:10:14-07:00",    
+    "review_items_count": 10   
+}
+```
+
+
+### GET /api/study_sessions/:id/words
+This endpoint will return all of the words used in a specific study session
+
+#### JSON Response
+```json
+{
+    "items": [
+     {
+        "spanish": "hola",
+        "english": "hello",
+        "correct_count": 10,
+        "wrong_count": 5,        
+     }
+    ],
+    "pagination": {
+        "current_page": 1,
+        "total_pages": 5,
+        "total_items": 100,
+        "items_per_page": 20
+    }
+}
+```
 ## Settings Endpoints
 
 ### POST /api/reset_history
@@ -701,11 +625,6 @@ This endpoint will reset the history of all study sessions
     "message": "Study history has been reset"
 }
 ```
-
-
-
-
-
 
 ## Task Runner Tasks
 

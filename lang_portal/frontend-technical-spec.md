@@ -1,11 +1,51 @@
 # Frontend Technical Spec
 
+## Business Goal
+
+A single-page web application that provides:
+1. An intuitive dashboard for tracking learning progress
+2. Easy access to vocabulary management
+3. Interactive study activities
+4. Detailed progress tracking and statistics
+
+## Technical Requirements
+
+- React.js as the frontend library
+- Tailwind CSS as the css framework
+- Vite.js as the local development server
+- TypeScript as the programming language
+- ShadCN for components
+
+## Project Structure
+```text
+lang_portal_frontend/
+├── src/
+│   ├── components/     # Reusable UI components
+│   │   ├── common/    # Shared components (buttons, cards, etc.)
+│   │   ├── dashboard/ # Dashboard-specific components
+│   │   ├── study/     # Study activity components
+│   │   └── words/     # Word management components
+│   ├── hooks/         # Custom React hooks
+│   ├── pages/         # Page components
+│   ├── services/      # API integration
+│   ├── types/         # TypeScript definitions
+│   └── utils/         # Helper functions
+├── public/            # Static assets
+├── tests/            # Test files
+├── package.json
+└── vite.config.ts
+```
+
+
+
+
+
+
 ## Pages
 
 ### Dashboard Index '/dashboard'
-
 #### Purpose
-The purpse of this page is to provide a summary of learning and act as the summary page when user visits webapp
+The purpose of this page is to provide a summary of learning and act as the summary page when user visits webapp
 
 #### Components
 - Last Study Session
@@ -36,7 +76,6 @@ The purpse of this page is to provide a summary of learning and act as the summa
 
 
 ### Study Activities Index '/study_activities'
-
 #### Purpose
 The purpose of this page is to show a collection of study activities with a thumbnail and its name to either launch or view the study activity.
 
@@ -51,9 +90,10 @@ The purpose of this page is to show a collection of study activities with a thum
 -GET /api/study_activities
 
 ### Study Activity Show '/study_activities/:id'
-
 #### Purpose
-The purpose of this page is to show the details of a study activity in its past study sessions.
+The purpose of this page is to show the details of a study activity and its past study sessions.
+Clicking on the ID of a study session on this page will take us the detail of that study session.
+
 
 #### Components
 - Name of study activity
@@ -75,7 +115,6 @@ The purpose of this page is to show the details of a study activity in its past 
 
 
 ### Study Activities Launch '/study_activities/:id/launch'
-
 #### Purpose
 The purpose of this page is to launch a study activity
 
@@ -97,8 +136,8 @@ Also after the form is submitted the page will redirect to the study session sho
      - required params:  group_id, study_activity_id 
 
 
-### Words Index '/words'
 
+### Words Index '/words'
 #### Purpose
 The purpose of this page is to show all the words in our database 
 
@@ -117,7 +156,6 @@ The purpose of this page is to show all the words in our database
 
 
 ### Word Show Page '/words/:id'
-
 #### Purpose
 The purpose of this page is to show a single word and its details
 
@@ -136,8 +174,8 @@ The purpose of this page is to show a single word and its details
 - GET /api/words/:id
 
 
-### Word Groups Index '/groups'
 
+### Word Groups Index '/groups'
 #### Purpose
 The purpose of this page is to show all the groups in our database
 
@@ -153,7 +191,6 @@ The purpose of this page is to show all the groups in our database
 
 
 ### Group Show Page '/groups/:id'
-
 #### Purpose
 The purpose of this page is to show a single group and its details
 
@@ -164,18 +201,13 @@ The purpose of this page is to show a single group and its details
     - Total Word Count
 - Words in Group (Paginated list of words)
     - Should use the same component as the word index page
-- Study Sessions (Paginated list of study sessions)
-    - Should use the same component as the study session index page
 
 
 #### Needed API Endpoints
-- GET /api/groups/:id (the name and group stats)
-- GET /api/groups/:id/words
-- GET /api/groups/:id/study_sessions
+- GET /api/groups/:id 
 
 
 ### Study Sessions Index '/study_sessions' 
-
 #### Purpose
 The purpose of this page is to show a list of study sessions in our database
 
@@ -184,6 +216,7 @@ The purpose of this page is to show a list of study sessions in our database
     - Columns
         - Id
         - Activity Name
+        - Group Name
         - Start Time
         - End Time
         - Number of Review Items
@@ -205,7 +238,7 @@ The purpose of this page is to show a single study session and its details
     - Start Time
     - End Time
     - Number of Review Items
-- Paginated List of Review Items
+- Paginated List of Words Reviewed 
     - Should use the same component as the word index page
 
 #### Needed API Endpoints
