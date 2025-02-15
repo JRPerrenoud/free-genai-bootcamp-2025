@@ -61,95 +61,39 @@ The application uses SQLite as its database. The schema is defined in `db/migrat
 
 ### Tables
 
-#### words
-Stores vocabulary words with their translations and part of speech.
-```sql
-CREATE TABLE IF NOT EXISTS words (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    spanish TEXT NOT NULL,
-    english TEXT NOT NULL,
-    part_of_speech TEXT NOT NULL
-);
-```
+- words - stored vocabulary words
+    - id integer
+    - spanish string
+    - english string
+    - parts json
 
-#### groups
-Stores word groups/categories.
-```sql
-CREATE TABLE IF NOT EXISTS groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT
-);
-```
+- words_groups - join table for words and groups
+many-to-many
+    - id integer
+    - word_id integer
+    - group_id integer
+    
+- groups - thematic groups of words
+    -id integer
+    - name string
 
-#### word_groups
-Join table connecting words to their groups.
-```sql
-CREATE TABLE IF NOT EXISTS word_groups (
-    word_id INTEGER NOT NULL,
-    group_id INTEGER NOT NULL,
-    PRIMARY KEY (word_id, group_id),
-    FOREIGN KEY (word_id) REFERENCES words(id),
-    FOREIGN KEY (group_id) REFERENCES groups(id)
-);
-```
+- study_sessions - records of study sessions grouping word_review_items
+    - id integer
+    - group_id integer
+    - created_at datetime
+    - study_activity_id integer
+    
+- study_activities - a specific study activity, linking study session to group
+    - id integer
+    - study_session_id integar
+    - group_id integer
+    - created_at datetime
 
-#### study_activities
-Stores different types of study activities (e.g., flashcards, quizzes).
-```sql
-CREATE TABLE IF NOT EXISTS study_activities (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-#### study_sessions
-Records individual study sessions for specific groups and activities.
-```sql
-CREATE TABLE IF NOT EXISTS study_sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    group_id INTEGER NOT NULL,
-    study_activity_id INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (group_id) REFERENCES groups(id),
-    FOREIGN KEY (study_activity_id) REFERENCES study_activities(id)
-);
-```
-
-#### word_review_items
-Records individual word reviews during study sessions.
-```sql
-CREATE TABLE IF NOT EXISTS word_review_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    word_id INTEGER NOT NULL,
-    study_session_id INTEGER NOT NULL,
-    correct BOOLEAN NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (word_id) REFERENCES words(id),
-    FOREIGN KEY (study_session_id) REFERENCES study_sessions(id)
-);
-```
-
-### Performance Indices
-
-The following indices are created to optimize query performance:
-
-```sql
-CREATE INDEX IF NOT EXISTS idx_word_groups_word_id ON word_groups(word_id);
-CREATE INDEX IF NOT EXISTS idx_word_groups_group_id ON word_groups(group_id);
-CREATE INDEX IF NOT EXISTS idx_study_sessions_group_id ON study_sessions(group_id);
-CREATE INDEX IF NOT EXISTS idx_study_sessions_activity_id ON study_sessions(study_activity_id);
-CREATE INDEX IF NOT EXISTS idx_word_review_items_word_id ON word_review_items(word_id);
-CREATE INDEX IF NOT EXISTS idx_word_review_items_session_id ON word_review_items(study_session_id);
-```
-
-These indices improve performance for:
-- Looking up words in a group
-- Looking up groups for a word
-- Finding study sessions for a group or activity
-- Retrieving word review history
+- word_review_items - a record of word practice, determining if the word was correct or not
+    - word_id integer
+    - study_session_id integer
+    - correct boolean
+    - created_at datetime
 
 ## API Endpoints
 
@@ -187,7 +131,7 @@ Returns information about the most recent study session.
         "group_id": 456,
         "created_at": "2025-02-12T11:10:14-07:00",
         "study_activity_id": 789,
-        "group_name": "Math"
+        "group_name": "Verb"
     }
 }
 ```
@@ -208,7 +152,7 @@ Please note that the frontend will determine progress by based on total words st
 }
 ```
 
-#### GET /api/dashboard/quick-stats
+#### GET /api/dashboard/quick_stats
 Returns quick overview statistics.
 
 #### JSON Response
@@ -216,10 +160,12 @@ Returns quick overview statistics.
 {
     "success": true,
     "data": {
-        "total_words": 1000,
+        "total_words_studied": 1000,
+        "total_words_correct": 800,
         "total_groups": 10,
         "total_study_sessions": 25,
-        "overall_accuracy": 0.8
+        "overall_accuracy": 0.8,
+        "study_streak": 5
     }
 }
 ```
@@ -406,8 +352,7 @@ Returns details for a specific group including its words.
     "data": {
         "group": {
             "id": 1,
-            "name": "Basic Vocabulary",
-            "description": "Essential everyday words"
+            "name": "interjection"            
         },
         "words": [
             {
@@ -428,8 +373,7 @@ Creates a new group.
 #### Request Body
 ```json
 {
-    "name": "Basic Vocabulary",
-    "description": "Essential everyday words"
+    "name": "noun"    
 }
 ```
 
@@ -439,8 +383,7 @@ Creates a new group.
     "success": true,
     "data": {
         "id": 1,
-        "name": "Basic Vocabulary",
-        "description": "Essential everyday words"
+        "name": "Basic Vocabulary"        
     }
 }
 ```
@@ -451,19 +394,16 @@ Updates an existing group.
 #### Request Body
 ```json
 {
-    "name": "Basic Vocabulary",
-    "description": "Essential everyday words"
+    "name": "verb"
 }
 ```
 
 #### JSON Response
 ```json
-{
     "success": true,
     "data": {
         "id": 1,
-        "name": "Basic Vocabulary",
-        "description": "Essential everyday words"
+        "name": "verb"        
     }
 }
 ```
@@ -521,7 +461,7 @@ This endpoint will return a single group
 ```json
 {
     "id": 1,
-    "name": "Basic Vocabulary",
+    "name": "noun",
     "statistics": {
         "total_word_count": 100
     }
@@ -804,7 +744,7 @@ Deletes a study activity.
 }
 ```
 
-#### GET /api/study-activities/:id/sessions
+#### GET /api/study_activities/:id/sessions
 Returns a paginated list of study sessions for a specific activity.
 
 Query Parameters:
@@ -820,7 +760,7 @@ Query Parameters:
             {
                 "id": 1,
                 "group_id": 1,
-                "group_name": "Basic Vocabulary",
+                "group_name": "Typing Tutor",
                 "study_activity_id": 1,
                 "created_at": "2025-02-13T21:20:34-07:00"
             }
@@ -833,7 +773,7 @@ Query Parameters:
 }
 ```
 
-#### POST /api/study-activities/:id/sessions
+#### POST /api/study_activities/:id/sessions
 Starts a new study session for an activity.
 
 #### Request Body
@@ -850,14 +790,14 @@ Starts a new study session for an activity.
     "data": {
         "id": 1,
         "group_id": 1,
-        "group_name": "Basic Vocabulary",
+        "group_name": "Typing Tutor",
         "study_activity_id": 1,
         "created_at": "2025-02-13T21:20:34-07:00"
     }
 }
 ```
 
-#### POST /api/study-sessions/:session_id/results
+#### POST /api/study_activities/:id/sessions/:session_id/results
 Records a study result for a session.
 
 #### Request Body
