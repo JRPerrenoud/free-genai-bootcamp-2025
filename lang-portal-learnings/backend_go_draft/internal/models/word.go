@@ -8,11 +8,11 @@ import (
 // CreateWord creates a new word in the database
 func (db *DB) CreateWord(word *Word) error {
 	query := `
-		INSERT INTO words (spanish, english, part_of_speech)
-		VALUES (?, ?, ?)
+		INSERT INTO words (spanish, english)
+		VALUES (?, ?)
 	`
 
-	result, err := db.Exec(query, word.Spanish, word.English, word.PartOfSpeech)
+	result, err := db.Exec(query, word.Spanish, word.English)
 	if err != nil {
 		return fmt.Errorf("error creating word: %v", err)
 	}
@@ -29,9 +29,9 @@ func (db *DB) CreateWord(word *Word) error {
 // GetWord retrieves a word by ID
 func (db *DB) GetWord(id int) (*Word, error) {
 	word := &Word{}
-	query := `SELECT id, spanish, english, part_of_speech FROM words WHERE id = ?`
+	query := `SELECT id, spanish, english FROM words WHERE id = ?`
 
-	err := db.QueryRow(query, id).Scan(&word.ID, &word.Spanish, &word.English, &word.PartOfSpeech)
+	err := db.QueryRow(query, id).Scan(&word.ID, &word.Spanish, &word.English)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -46,11 +46,11 @@ func (db *DB) GetWord(id int) (*Word, error) {
 func (db *DB) UpdateWord(word *Word) error {
 	query := `
 		UPDATE words
-		SET spanish = ?, english = ?, part_of_speech = ?
+		SET spanish = ?, english = ?
 		WHERE id = ?
 	`
 
-	result, err := db.Exec(query, word.Spanish, word.English, word.PartOfSpeech, word.ID)
+	result, err := db.Exec(query, word.Spanish, word.English, word.ID)
 	if err != nil {
 		return fmt.Errorf("error updating word: %v", err)
 	}
@@ -114,12 +114,12 @@ func (db *DB) ListWords(page, pageSize int, groupID *int) ([]Word, int, error) {
 
 	// Get paginated words
 	query := `
-		SELECT id, spanish, english, part_of_speech
+		SELECT id, spanish, english
 		FROM words
 	`
 	if groupID != nil {
 		query = `
-			SELECT DISTINCT w.id, w.spanish, w.english, w.part_of_speech
+			SELECT DISTINCT w.id, w.spanish, w.english
 			FROM words w
 			JOIN word_groups wg ON w.id = wg.word_id
 			WHERE wg.group_id = ?
@@ -141,7 +141,7 @@ func (db *DB) ListWords(page, pageSize int, groupID *int) ([]Word, int, error) {
 
 	for rows.Next() {
 		var word Word
-		err := rows.Scan(&word.ID, &word.Spanish, &word.English, &word.PartOfSpeech)
+		err := rows.Scan(&word.ID, &word.Spanish, &word.English)
 		if err != nil {
 			return nil, 0, fmt.Errorf("error scanning word: %v", err)
 		}

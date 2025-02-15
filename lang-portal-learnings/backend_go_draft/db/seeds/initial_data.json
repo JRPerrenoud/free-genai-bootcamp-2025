@@ -1,0 +1,148 @@
+{
+    "groups": [
+        {
+            "name": "Interjection",
+            "description": "Common interjections and expressions in Spanish"
+        },
+        {
+            "name": "Number",
+            "description": "Numbers in Spanish"
+        },
+        {
+            "name": "Common Verbs",
+            "description": "Most frequently used Spanish verbs"
+        }
+    ],
+    "words": [
+        {
+            "spanish": "hola",
+            "english": "hello",            
+            "group_names": ["Interjection"]
+        },
+        {
+            "spanish": "gracias",
+            "english": "thank you",            
+            "group_names": ["Interjection"]
+        },
+        {
+            "spanish": "por favor",
+            "english": "please",            
+            "group_names": ["Interjection"]
+        },
+        {
+            "spanish": "uno",
+            "english": "one",            
+            "group_names": ["Number"]
+        },
+        {
+            "spanish": "dos",
+            "english": "two",            
+            "group_names": ["Number"]
+        },
+        {
+            "spanish": "ser",
+            "english": "to be (permanent)",            
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "estar",
+            "english": "to be (temporary)",            
+            "group_names": ["Common Verbs"]
+        },
+        {
+            "spanish": "tener",
+            "english": "to have",            
+            "group_names": ["Common Verbs"]
+        }
+    ],
+    "study_activities": [
+        {
+            "name": "Flashcards",
+            "description": "Practice vocabulary using flashcards",
+            "thumbnail_url": "https://example.com/flashcards.jpg",
+            "launch_url": "https://example.com/flashcards"
+        },
+        {
+            "name": "Multiple Choice",
+            "description": "Choose the correct translation from options",
+            "thumbnail_url": "https://example.com/quiz.jpg",
+            "launch_url": "https://example.com/quiz"
+        },
+        {
+            "name": "Writing Practice",
+            "description": "Write the translation of given words",
+            "thumbnail_url": "https://example.com/writing.jpg",
+            "launch_url": "https://example.com/writing"
+        }
+    ],
+    "study_sessions": [
+        {
+            "group_id": 1,
+            "study_activity_id": 1,
+            "start_time": "2025-02-14T17:31:26.780455953-07:00",
+            "end_time": "2025-02-14T17:46:26.780455953-07:00"
+        },
+        {
+            "group_id": 2,
+            "study_activity_id": 2,
+            "start_time": "2025-02-14T17:31:26.785455953-07:00",
+            "end_time": "2025-02-14T17:46:26.785455953-07:00"
+        },
+        {
+            "group_id": 3,
+            "study_activity_id": 3,
+            "start_time": "2025-02-14T17:31:26.790455953-07:00",
+            "end_time": "2025-02-14T17:46:26.790455953-07:00"
+        }
+    ],
+    "word_review_items": [
+        {
+            "word_id": 1,
+            "study_session_id": 1,
+            "correct": true,
+            "created_at": "2025-02-14T17:31:26.795455953-07:00"
+        },
+        {
+            "word_id": 2,
+            "study_session_id": 1,
+            "correct": true,
+            "created_at": "2025-02-14T17:31:26.800455953-07:00"
+        },
+        {
+            "word_id": 3,
+            "study_session_id": 1,
+            "correct": false,
+            "created_at": "2025-02-14T17:31:26.805455953-07:00"
+        },
+        {
+            "word_id": 4,
+            "study_session_id": 2,
+            "correct": true,
+            "created_at": "2025-02-14T17:31:26.810455953-07:00"
+        },
+        {
+            "word_id": 5,
+            "study_session_id": 2,
+            "correct": true,
+            "created_at": "2025-02-14T17:31:26.815455953-07:00"
+        },
+        {
+            "word_id": 6,
+            "study_session_id": 3,
+            "correct": true,
+            "created_at": "2025-02-14T17:31:26.820455953-07:00"
+        },
+        {
+            "word_id": 7,
+            "study_session_id": 3,
+            "correct": false,
+            "created_at": "2025-02-14T17:31:26.825455953-07:00"
+        },
+        {
+            "word_id": 8,
+            "study_session_id": 3,
+            "correct": true,
+            "created_at": "2025-02-14T17:31:26.830455953-07:00"
+        }
+    ]
+}

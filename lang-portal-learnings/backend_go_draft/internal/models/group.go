@@ -182,7 +182,7 @@ func (db *DB) GetGroupWords(groupID int, page, pageSize int) ([]Word, int, error
 
 	// Get words
 	query := `
-		SELECT w.id, w.spanish, w.english, w.part_of_speech
+		SELECT w.id, w.spanish, w.english
 		FROM words w 
 		JOIN word_groups wg ON w.id = wg.word_id 
 		WHERE wg.group_id = ? 
@@ -198,7 +198,7 @@ func (db *DB) GetGroupWords(groupID int, page, pageSize int) ([]Word, int, error
 
 	for rows.Next() {
 		var word Word
-		err := rows.Scan(&word.ID, &word.Spanish, &word.English, &word.PartOfSpeech)
+		err := rows.Scan(&word.ID, &word.Spanish, &word.English)
 		if err != nil {
 			return nil, 0, fmt.Errorf("error scanning word: %v", err)
 		}

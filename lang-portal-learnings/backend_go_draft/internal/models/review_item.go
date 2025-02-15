@@ -87,19 +87,23 @@ func (db *DB) ListSessionReviewItems(sessionID int) ([]WordReviewItem, error) {
 
 // GetOverallAccuracy retrieves the overall accuracy across all review items
 func (db *DB) GetOverallAccuracy() (float64, error) {
-	var accuracy float64
-	err := db.QueryRow(
-		`SELECT 
-			CAST(COUNT(CASE WHEN correct = 1 THEN 1 END) AS FLOAT) / 
-			CAST(COUNT(*) AS FLOAT) as accuracy
-		FROM word_review_items`,
-	).Scan(&accuracy)
+	var total, correct int
+	err := db.QueryRow(`
+		SELECT 
+			COUNT(*) as total,
+			COUNT(CASE WHEN correct = 1 THEN 1 END) as correct
+		FROM word_review_items
+	`).Scan(&total, &correct)
 
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error getting accuracy stats: %v", err)
 	}
 
-	return accuracy, nil
+	if total == 0 {
+		return 0, nil
+	}
+
+	return float64(correct) / float64(total), nil
 }
 
 // GetStudyStreak returns the number of consecutive days with study sessions

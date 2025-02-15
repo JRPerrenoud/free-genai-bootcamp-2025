@@ -2,8 +2,7 @@
 CREATE TABLE IF NOT EXISTS words (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     spanish TEXT NOT NULL,
-    english TEXT NOT NULL,
-    part_of_speech TEXT NOT NULL
+    english TEXT NOT NULL
 );
 
 -- Create groups table
@@ -27,6 +26,8 @@ CREATE TABLE IF NOT EXISTS study_activities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
+    thumbnail_url TEXT,
+    launch_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -35,6 +36,8 @@ CREATE TABLE IF NOT EXISTS study_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     group_id INTEGER NOT NULL,
     study_activity_id INTEGER NOT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (group_id) REFERENCES groups(id),
     FOREIGN KEY (study_activity_id) REFERENCES study_activities(id)

@@ -5,12 +5,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/magefile/mage/mg"
-	"github.com/magefile/mage/sh"
+
+	"lang_portal_go/internal/models"
+	"lang_portal_go/internal/seeder"
 )
 
 type DB mg.Namespace
@@ -56,9 +59,34 @@ func (DB) Clean() error {
 // Seed populates the database with initial data
 func (DB) Seed() error {
 	fmt.Println("Seeding database...")
-	if err := sh.Run("go", "run", "./cmd/seed/main.go"); err != nil {
+	
+	db, err := models.NewDB(dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Load and seed initial data
+	seedData, err := seeder.LoadSeedData("db/seeds/initial_data.json")
+	if err != nil {
+		return fmt.Errorf("failed to load seed data: %v", err)
+	}
+
+	if err := seeder.SeedDatabase(db, seedData); err != nil {
 		return fmt.Errorf("failed to seed database: %v", err)
 	}
+
+	// Load and seed test data
+	testData, err := seeder.LoadSeedData("db/seeds/test_data.json")
+	if err != nil {
+		return fmt.Errorf("failed to load test data: %v", err)
+	}
+
+	if err := seeder.SeedDatabase(db, testData); err != nil {
+		return fmt.Errorf("failed to seed test data: %v", err)
+	}
+
+	log.Println("Database seeded successfully!")
 	return nil
 }
 

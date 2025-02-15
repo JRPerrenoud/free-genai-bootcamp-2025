@@ -3,9 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/gin-gonic/gin"
 	"lang_portal_go/internal/handlers"
 	"lang_portal_go/internal/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 func setupRouter(db *models.DB) *gin.Engine {
@@ -16,12 +17,12 @@ func setupRouter(db *models.DB) *gin.Engine {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
 		}
-		
+
 		c.Next()
 	})
 
@@ -37,7 +38,7 @@ func setupRouter(db *models.DB) *gin.Engine {
 		// Dashboard routes
 		api.GET("/dashboard/last_study_session", dashboardHandler.LastStudySession)
 		api.GET("/dashboard/study_progress", dashboardHandler.StudyProgress)
-		api.GET("/dashboard/quick-stats", dashboardHandler.QuickStats)
+		api.GET("/dashboard/quick_stats", dashboardHandler.QuickStats)
 
 		// Word routes
 		api.GET("/words", wordHandler.ListWords)
@@ -75,9 +76,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database: ", err)
 	}
-	
+
 	router := setupRouter(db)
-	
+
 	// Start the server on port 8080
 	if err := router.Run(":8080"); err != nil {
 		log.Fatal("Failed to start server: ", err)

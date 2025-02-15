@@ -30,21 +30,15 @@ func (h *DashboardHandler) LastStudySession(c *gin.Context) {
 		return
 	}
 
-	// Get statistics for this session
-	correct, wrong, err := h.db.GetStudySessionStats(session.ID)
-	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error fetching session statistics")
-		return
-	}
-
 	response := gin.H{
 		"id":                session.ID,
 		"group_id":          session.GroupID,
-		"created_at":        session.CreatedAt,
 		"study_activity_id": session.StudyActivityID,
+		"activity_name":     session.ActivityName,
 		"group_name":        session.GroupName,
-		"correct_count":     correct,
-		"wrong_count":       wrong,
+		"start_time":        session.StartTime,
+		"end_time":          session.EndTime,
+		"review_items_count": session.ReviewItemsCount,
 	}
 
 	respondWithSuccess(c, response)
@@ -59,8 +53,13 @@ func (h *DashboardHandler) StudyProgress(c *gin.Context) {
 	}
 
 	response := gin.H{
-		"total_words_studied":    studied,
+		"total_words_studied":   studied,
 		"total_available_words": total,
+		"progress_percentage":   float64(0),
+	}
+
+	if total > 0 {
+		response["progress_percentage"] = float64(studied) / float64(total) * 100
 	}
 
 	respondWithSuccess(c, response)
@@ -69,21 +68,21 @@ func (h *DashboardHandler) StudyProgress(c *gin.Context) {
 // QuickStats returns quick overview statistics
 func (h *DashboardHandler) QuickStats(c *gin.Context) {
 	// Get total words
-	_, totalWords, err := h.db.GetStudyProgress()
+	studied, totalWords, err := h.db.GetStudyProgress()
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Error fetching word count")
 		return
 	}
 
 	// Get total groups
-	groups, _, err := h.db.ListGroups(1, 1)
+	_, totalGroups, err := h.db.ListGroups(1, 1)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Error fetching group count")
 		return
 	}
 
 	// Get total study sessions
-	sessions, _, err := h.db.ListStudySessions(1, 1)
+	_, totalSessions, err := h.db.ListStudySessions(1, 1)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Error fetching session count")
 		return
@@ -99,16 +98,17 @@ func (h *DashboardHandler) QuickStats(c *gin.Context) {
 	// Get study streak
 	streak, err := h.db.GetStudyStreak()
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error fetching study streak")
+		respondWithError(c, http.StatusInternalServerError, "Error fetching streak")
 		return
 	}
 
 	response := gin.H{
-		"total_words":         totalWords,
-		"total_groups":        len(groups),
-		"total_study_sessions": len(sessions),
-		"overall_accuracy":    accuracy,
-		"study_streak":        streak,
+		"total_words_studied":   studied,
+		"total_words":          totalWords,
+		"total_groups":         totalGroups,
+		"total_study_sessions": totalSessions,
+		"overall_accuracy":     accuracy,
+		"study_streak":         streak,
 	}
 
 	respondWithSuccess(c, response)

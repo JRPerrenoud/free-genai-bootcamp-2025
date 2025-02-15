@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -32,7 +33,7 @@ func (h *StudyActivityHandler) ListStudyActivities(c *gin.Context) {
 	respondWithSuccess(c, response)
 }
 
-// GetStudyActivity returns details for a specific study activity
+// GetStudyActivity returns a specific study activity
 func (h *StudyActivityHandler) GetStudyActivity(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -43,13 +44,18 @@ func (h *StudyActivityHandler) GetStudyActivity(c *gin.Context) {
 
 	activity, err := h.db.GetStudyActivity(id)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error fetching study activity")
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("Error fetching study activity: %v", err))
 		return
 	}
-
 	if activity == nil {
 		respondWithError(c, http.StatusNotFound, "Study activity not found")
 		return
+	}
+
+	// Construct launch button
+	activity.LaunchButton = &models.LaunchButton{
+		Text: "Launch",
+		URL:  activity.LaunchURL,
 	}
 
 	respondWithSuccess(c, activity)
@@ -115,21 +121,38 @@ func (h *StudyActivityHandler) DeleteStudyActivity(c *gin.Context) {
 // GetStudyActivitySessions returns all study sessions for a specific activity
 func (h *StudyActivityHandler) GetStudyActivitySessions(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	activityID, err := strconv.Atoi(idStr)
 	if err != nil {
 		respondWithError(c, http.StatusBadRequest, "Invalid study activity ID")
 		return
 	}
 
-	page, pageSize := getPaginationParams(c, 20)
+	pageStr := c.DefaultQuery("page", "1")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
 
-	sessions, total, err := h.db.GetStudyActivitySessions(id, page, pageSize)
+	pageSizeStr := c.DefaultQuery("page_size", "20")
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 20
+	}
+
+	sessions, total, err := h.db.GetStudyActivitySessions(activityID, page, pageSize)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "Error fetching study sessions")
+		respondWithError(c, http.StatusInternalServerError, fmt.Sprintf("Error fetching study sessions: %v", err))
 		return
 	}
 
-	response := wrapWithPagination(sessions, page, total, pageSize)
+	response := gin.H{
+		"items":          sessions,
+		"total":          total,
+		"current_page":   page,
+		"items_per_page": pageSize,
+		"total_pages":    (total + pageSize - 1) / pageSize,
+	}
+
 	respondWithSuccess(c, response)
 }
 
@@ -179,7 +202,7 @@ func (h *StudyActivityHandler) RecordStudyResult(c *gin.Context) {
 		return
 	}
 
-	reviewItem, err := h.db.CreateWordReviewItem(req.WordID, sessionID, req.Correct)
+	reviewItem, err := h.db.CreateWordReviewItem(sessionID, req.WordID, req.Correct)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "Error recording study result")
 		return
