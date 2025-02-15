@@ -1,0 +1,89 @@
+{
+  "words": [
+    {
+      "spanish": "hola",
+      "english": "hello",
+      "type": "interjection"
+    },
+    {
+      "spanish": "gracias",
+      "english": "thank you",
+      "type": "interjection"
+    },
+    {
+      "spanish": "comer",
+      "english": "to eat",
+      "type": "verb"
+    },
+    {
+      "spanish": "casa",
+      "english": "house",
+      "type": "noun"
+    },
+    {
+      "spanish": "grande",
+      "english": "big",
+      "type": "adjective"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Basic Greetings",
+      "description": "Common greetings and introductions in Spanish"
+    },
+    {
+      "name": "Common Verbs",
+      "description": "Essential verbs for daily conversation"
+    }
+  ],
+  "group_words": [
+    {
+      "group_name": "Basic Greetings",
+      "words": ["hola", "gracias"]
+    },
+    {
+      "group_name": "Common Verbs",
+      "words": ["comer"]
+    }
+  ],
+  "study_activities": [
+    {
+      "name": "Typing Tutor",
+      "thumbnail_url": "/activities/typing-tutor.png",
+      "launch_url": "/activities/typing-tutor"
+    },
+    {
+      "name": "Flashcards",
+      "thumbnail_url": "/activities/flashcards.png",
+      "launch_url": "/activities/flashcards"
+    }
+  ],
+  "study_sessions": [
+    {
+      "group_name": "Basic Greetings",
+      "activity_name": "Typing Tutor",
+      "created_at": "2025-02-15T12:00:00Z",
+      "review_items": [
+        {
+          "word": "hola",
+          "correct": true
+        },
+        {
+          "word": "gracias",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "group_name": "Common Verbs",
+      "activity_name": "Flashcards",
+      "created_at": "2025-02-15T13:00:00Z",
+      "review_items": [
+        {
+          "word": "comer",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

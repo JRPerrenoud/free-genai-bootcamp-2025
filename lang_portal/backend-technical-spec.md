@@ -10,7 +10,7 @@ A language learning school wants to build a prototype learning portal that serve
 ## Technical Requirements
 
 - Backend Framework: Go with Gin web framework
-- Database: SQLite3 (file: `words.db`)
+- Database: SQLite3 (file: `db/lang_portal.db`)
 - Task Runner: Mage for database management and server operations
 - API Format: JSON responses with standardized success/error format
 - Authentication: None (single-user application)
@@ -35,7 +35,7 @@ A language learning school wants to build a prototype learning portal that serve
 ## Directory Structure
 
 ```text
-lang_portal_go/
+backend_go/
 ├── cmd/
 │   ├── server/        # Main web server application
 │   ├── init_db/       # Database initialization with CLI flags
@@ -48,7 +48,8 @@ lang_portal_go/
 │   └── services/      # Business logic
 ├── db/
 │   ├── migrations/    # Database schema and migrations
-│   └── seeds/         # Initial data for seeding
+│   ├── seeds/         # Initial data for seeding
+│   └── lang_portal.db # SQLite database file
 ├── magefile.go        # Task runner configuration
 ├── go.mod            # Go module definition
 ├── go.sum            # Go module checksums
@@ -636,7 +637,7 @@ The application uses [Mage](https://magefile.org/) as its task runner. Here are 
 Initializes a new SQLite database using the schema defined in `db/migrations/001_initial_schema.sql`.
 
 #### `mage db:clean`
-Removes the existing database file (`words.db`).
+Removes the existing database file (`db/lang_portal.db`).
 
 #### `mage db:seed`
 Populates the database with initial data using the seeding utility in `cmd/seed/main.go`.
