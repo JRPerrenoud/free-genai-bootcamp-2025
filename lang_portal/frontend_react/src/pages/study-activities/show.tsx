@@ -1,11 +1,11 @@
-import { FC, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { studyActivitiesService } from '../../services/study-activities'
-import { studySessionsService } from '../../services/study-sessions'
-import type { StudyActivity } from '../../types/study-activities'
-import type { StudySession } from '../../types/study-sessions'
+import type { StudyActivity, StudySession } from '../../types/study-activities'
+import { StudySessionsList } from '../../components/study/StudySessionsList'
+import { getActivityThumbnailUrl } from '../../utils/image-utils'
 
-const StudyActivityShowPage: FC = () => {
+export default function StudyActivityShowPage() {
   const { id } = useParams<{ id: string }>()
   const [activity, setActivity] = useState<StudyActivity | null>(null)
   const [sessions, setSessions] = useState<StudySession[]>([])
@@ -17,16 +17,21 @@ const StudyActivityShowPage: FC = () => {
       if (!id) return
       
       try {
-        const [activityRes, sessionsRes] = await Promise.all([
-          studyActivitiesService.getById(parseInt(id)),
-          studySessionsService.getByActivityId(parseInt(id))
-        ])
-
+        // First get the activity details
+        const activityRes = await studyActivitiesService.getById(parseInt(id))
         setActivity(activityRes.data)
-        setSessions(sessionsRes.data.items)
+
+        // Then try to get the sessions
+        try {
+          const sessionsRes = await studyActivitiesService.getSessions(parseInt(id))
+          setSessions(sessionsRes.data.items || [])
+        } catch (err) {
+          console.error('Error loading sessions:', err)
+          setSessions([]) // Set empty sessions but don't show error
+        }
       } catch (err) {
-        console.error('Error loading study activity data:', err)
-        setError('Failed to load study activity data')
+        console.error('Error loading study activity:', err)
+        setError('Failed to load study activity')
       } finally {
         setIsLoading(false)
       }
@@ -69,6 +74,15 @@ const StudyActivityShowPage: FC = () => {
           {activity.description && (
             <p className="text-gray-600 mb-4">{activity.description}</p>
           )}
+          <img 
+            src={getActivityThumbnailUrl(activity.name, activity.thumbnail_url)}
+            alt={activity.name}
+            className="w-48 h-48 object-cover rounded-lg shadow-md mb-4"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.src = '/placeholder.png';
+            }}
+          />
         </div>
         <Link
           to={activity.launch_url}
@@ -80,53 +94,8 @@ const StudyActivityShowPage: FC = () => {
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Study Sessions</h2>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Review Items</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sessions.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    No study sessions found
-                  </td>
-                </tr>
-              ) : (
-                sessions.map((session) => (
-                  <tr key={session.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Link 
-                        to={`/sessions/${session.id}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {session.id}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{session.group_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(session.start_time).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(session.end_time).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{session.review_items_count}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <StudySessionsList sessions={sessions} activityName={activity.name} />
       </div>
     </div>
   )
 }
-
-export default StudyActivityShowPage

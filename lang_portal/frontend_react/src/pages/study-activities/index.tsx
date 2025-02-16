@@ -2,6 +2,7 @@ import { FC, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { studyActivitiesService } from '../../services/study-activities'
 import type { StudyActivity } from '../../types/study-activities'
+import { getActivityThumbnailUrl } from '../../utils/image-utils'
 
 const StudyActivitiesPage: FC = () => {
   const [activities, setActivities] = useState<StudyActivity[]>([])
@@ -64,14 +65,7 @@ const StudyActivitiesPage: FC = () => {
         {activities.map(activity => (
           <div key={activity.id} className="bg-white rounded-lg shadow-md p-6">
             <img 
-              src={activity.thumbnail_url?.startsWith('http') 
-                ? activity.thumbnail_url 
-                : activity.name === 'Typing Tutor' 
-                  ? '/typing-tutor.png'
-                  : activity.name === 'Flashcards'
-                    ? '/flashcards.png'
-                    : '/placeholder.png'
-              } 
+              src={getActivityThumbnailUrl(activity.name, activity.thumbnail_url)}
               alt={activity.name}
               className="w-full h-48 object-cover rounded-md mb-4"
               onError={(e) => {
@@ -85,7 +79,7 @@ const StudyActivitiesPage: FC = () => {
             )}
             <div className="flex justify-between">
               <Link 
-                to={`/study-activities/${activity.id}`}
+                to={`/study_activities/${activity.id}`}
                 className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
               >
                 View Sessions
