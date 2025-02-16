@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/common/Layout'
 import DashboardPage from './pages/dashboard'
 import WordsPage from './pages/words'
+import StudyActivitiesPage from './pages/study-activities'
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           
           {/* Study Activities routes */}
-          <Route path="/study_activities" element={<div>Study Activities</div>} />
+          <Route path="/study_activities" element={<StudyActivitiesPage />} />
           <Route path="/study_activities/:id" element={<div>Study Activity Details</div>} />
           <Route path="/study_activities/:id/launch" element={<div>Launch Study Activity</div>} />
           
