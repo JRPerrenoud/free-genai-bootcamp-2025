@@ -41,6 +41,12 @@ const Layout: FC<LayoutProps> = ({ children }) => {
             >
               Word Groups
             </Link>
+            <Link 
+              to="/sessions" 
+              className={`hover:text-primary ${location.pathname === '/sessions' ? 'text-primary font-medium' : ''}`}
+            >
+              Sessions
+            </Link>
           </nav>
         </div>
       </div>

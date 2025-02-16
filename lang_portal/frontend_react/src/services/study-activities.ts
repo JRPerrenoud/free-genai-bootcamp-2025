@@ -1,12 +1,14 @@
-import { api } from './api'
 import type { StudyActivityResponse, SingleStudyActivityResponse } from '../types/study-activities'
+import { api } from './api'
 
-export const studyActivitiesService = {
-  getAll: () => {
+class StudyActivitiesService {
+  async getAll(): Promise<StudyActivityResponse> {
     return api.get<StudyActivityResponse>('/api/study_activities')
-  },
+  }
 
-  getById: (id: number) => {
+  async getById(id: number): Promise<SingleStudyActivityResponse> {
     return api.get<SingleStudyActivityResponse>(`/api/study_activities/${id}`)
-  },
+  }
 }
+
+export const studyActivitiesService = new StudyActivitiesService()
