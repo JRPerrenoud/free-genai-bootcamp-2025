@@ -1,0 +1,27 @@
+[
+  {
+    "introduction": "You are going to listen to five conversations (pause). Two people speak (pause). The conversations are repeated twice (pause). There is one question and three images (A, B and C) for each conversation (pause). You have to select the image that answers the question.",
+    "conversation": "Woman: what are you doing?\nMan: read for a while. I like history books.\nWoman: Hey, thanks for your gift. I love my new shoes.\nMan: I'm glad to know that. They look great on you with that shirt.\nWoman: Yes, it's not very new but it has a good style",
+    "question": "What does the man give the girl?"
+  },
+  {
+    "introduction": "You are going to listen to five conversations (pause). Two people speak (pause). The conversations are repeated twice (pause). There is one question and three images (A, B and C) for each conversation (pause). You have to select the image that answers the question.",
+    "conversation": "Man. What do you want to buy today?\nWoman: I need a cookbook\nMan: The books are in the back.\nNext to the toy section\nWoman: mmmm I see them; there are quite a few balls on sale this year\nMan: Yes! Sportswear also sells well at this time.",
+    "question": "What does a woman buy?"
+  },
+  {
+    "introduction": "You are going to listen to five conversations (pause). Two people speak (pause). The conversations are repeated twice (pause). There is one question and three images (A, B and C) for each conversation (pause). You have to select the image that answers the question.",
+    "conversation": "Man: do you want to go for a cocktail?\nWoman: I work tomorrow. We better go for a coffee and the other week we do have something.\nMan: Good! I know a good place, close to the new clothing store.\nWoman: Okay. Come on and I'll show you my new cell phone.",
+    "question": "Where do people in the conversation go?"
+  },
+  {
+    "introduction": "You are going to listen to five conversations (pause). Two people speak (pause). The conversations are repeated twice (pause). There is one question and three images (A, B and C) for each conversation (pause). You have to select the image that answers the question.",
+    "conversation": "Woman: which one is Lorena?\nMan: The one with dark hair.\nThe other is María, his sister.\nWoman: mm, the one in the black shirt? I imagined her younger.\nMan: No, the one behind, in a dress. And look... there's Sonia. She still dyes her hair red.",
+    "question": "Who is Lorena?"
+  },
+  {
+    "introduction": "You are going to listen to five conversations (pause). Two people speak (pause). The conversations are repeated twice (pause). There is one question and three images (A, B and C) for each conversation (pause). You have to select the image that answers the question.",
+    "conversation": "Woman: This square is very beautiful. It has many trees\nMan: There are several squares nearby, but this is the best. The others have sales stalls and are full of people.\nWoman: Yes, this one is calmer. It only needs one source and it is perfect\nMan: Okay.",
+    "question": "Which square are you in right now?"
+  }
+]

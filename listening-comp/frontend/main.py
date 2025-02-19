@@ -196,19 +196,39 @@ def render_transcript_stage():
     # Download button and processing
     if url:
         if st.button("Download Transcript"):
+            progress_text = "Downloading transcript..."
+            progress_bar = st.progress(0, text=progress_text)
+            
             try:
+                # Update progress
+                progress_bar.progress(25, text="Initializing downloader...")
                 downloader = YouTubeTranscriptDownloader()
+                
+                progress_bar.progress(50, text="Fetching transcript...")
                 transcript = downloader.get_transcript(url)
+                
                 if transcript:
+                    progress_bar.progress(75, text="Processing transcript...")
                     # Store the raw transcript text in session state
                     transcript_text = "\n".join([entry['text'] for entry in transcript])
                     st.session_state.transcript = transcript_text
-                    st.success("Transcript downloaded successfully!")
+                    
+                    # Save the transcript file
+                    video_id = downloader.extract_video_id(url)
+                    if video_id and downloader.save_transcript(transcript, video_id):
+                        progress_bar.progress(100, text="Complete!")
+                        st.success(f"Transcript downloaded and saved to transcripts/{video_id}.txt")
+                    else:
+                        progress_bar.progress(100, text="Partial completion")
+                        st.warning("Transcript downloaded but could not be saved to file")
                 else:
+                    progress_bar.empty()
                     st.error("No transcript found for this video.")
             except Exception as e:
+                progress_bar.empty()
                 st.error(f"Error downloading transcript: {str(e)}")
-
+                st.error("If the process seems stuck, try refreshing the page and using a different video.")
+    
     col1, col2 = st.columns(2)
     
     with col1:
