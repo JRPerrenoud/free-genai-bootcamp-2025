@@ -19,27 +19,27 @@ class TranscriptStructurer:
         self.bedrock_client = boto3.client('bedrock-runtime', region_name="us-east-1")
         self.model_id = model_id
 
-    def structure_transcript(self, transcript_path: str, inference_config: Optional[Dict[str, Any]] = None) -> List[DELEQuestion]:
+    def structure_transcript(self, transcript_path: str, inference_config: Optional[Dict[str, Any]] = None) -> str:
         """
-        Structure the transcript into DELE questions using Amazon Bedrock
+        Structure the transcript into DELE listening practice questions
         
         Args:
             transcript_path (str): Path to the transcript file
             inference_config (Optional[Dict[str, Any]]): Configuration for inference
             
         Returns:
-            List[DELEQuestion]: List of structured DELE questions
+            str: Formatted string with questions in XML-like structure
         """
         if not os.path.exists(transcript_path):
             print(f"Error: Transcript file not found at {transcript_path}")
-            return []
+            return ""
 
         try:
             with open(transcript_path, 'r', encoding='utf-8') as f:
                 transcript_text = f.read()
         except Exception as e:
             print(f"Error reading transcript file: {str(e)}")
-            return []
+            return ""
 
         if inference_config is None:
             inference_config = {"temperature": 0.3}  # Lower temperature for more focused responses
@@ -47,20 +47,39 @@ class TranscriptStructurer:
         prompt = f"""
         Analyze this transcript and extract DELE listening practice questions.
         For each question, identify these three parts:
-        1. introduction: The introductory context
-        2. conversation: The dialogue or audio content
-        3. question: The specific question being asked
+        1. introduction: A brief setup in Spanish that ONLY describes:
+           - The general setting/location (e.g., "en una tienda", "en un restaurante")
+           - The number and type of speakers (e.g., "dos amigos", "un cliente y un vendedor")
+           - The general topic if relevant (e.g., "hablando sobre planes", "discutiendo sobre compras")
+           Always start with "Vas a escuchar..." or "Escucharás..."
+           NEVER include specific actions or details from the actual conversation.
 
-        Return the result as a valid JSON array where each object has these exact fields:
-        [
-            {{
-                "introduction": "introduction text here",
-                "conversation": "conversation text here",
-                "question": "question text here"
-            }}
-        ]
+        2. conversation: The exact dialogue or audio content in Spanish
+        3. question: The specific question being asked in Spanish
 
-        Here's the transcript:
+        Format each question exactly like this, maintaining the XML-like tags and newlines:
+        <question 1>
+        Introduction:
+        [Brief context-setting introduction following the rules above]
+
+        Conversation:
+        [The exact conversation text in Spanish]
+
+        Question:
+        [The question in Spanish]
+        </question>
+
+        Examples of GOOD introductions:
+        - "Vas a escuchar una conversación entre dos amigos en una cafetería hablando sobre sus planes."
+        - "Escucharás a un cliente y un vendedor en una tienda de ropa."
+        - "Vas a escuchar a dos personas conversando en una plaza del centro."
+
+        Examples of BAD introductions (DO NOT USE - too specific):
+        - "Vas a escuchar a una mujer preguntando por un café con leche." (reveals action)
+        - "Escucharás a dos amigos donde uno compra un libro." (reveals specific event)
+        - "Vas a escuchar una conversación sobre un regalo de zapatos." (reveals specific item)
+
+        Here's the transcript to analyze:
 
         {transcript_text}
         """
@@ -77,61 +96,26 @@ class TranscriptStructurer:
                 inferenceConfig=inference_config
             )
             
-            response_text = response['output']['message']['content'][0]['text']
-            
-            # Try to extract JSON from the response if it's wrapped in other text
-            try:
-                # Find the first [ and last ] to extract just the JSON array
-                start = response_text.find('[')
-                end = response_text.rfind(']') + 1
-                if start != -1 and end != 0:
-                    response_text = response_text[start:end]
-                
-                # Parse the response and convert to DELEQuestion objects
-                structured_data = json.loads(response_text)
-                questions = []
-                
-                for item in structured_data:
-                    question = DELEQuestion(
-                        introduction=item.get('introduction', ''),
-                        conversation=item.get('conversation', ''),
-                        question=item.get('question', '')
-                    )
-                    questions.append(question)
-                
-                return questions
-            except json.JSONDecodeError as e:
-                print(f"Error parsing JSON: {str(e)}")
-                print("Raw response:", response_text)
-                return []
+            return response['output']['message']['content'][0]['text']
             
         except Exception as e:
             print(f"Error processing structured data: {str(e)}")
-            return []
+            return ""
 
-    def save_structured_data(self, questions: List[DELEQuestion], filename: str) -> bool:
+    def save_structured_data(self, formatted_text: str, filename: str) -> bool:
         """
-        Save structured questions to a JSON file
+        Save structured questions to a file
         
         Args:
-            questions (List[DELEQuestion]): List of structured questions
+            formatted_text (str): Formatted text with questions
             filename (str): Output filename
             
         Returns:
             bool: True if successful, False otherwise
         """
         try:
-            data = [
-                {
-                    'introduction': q.introduction,
-                    'conversation': q.conversation,
-                    'question': q.question
-                }
-                for q in questions
-            ]
-            
             with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+                f.write(formatted_text)
             return True
             
         except Exception as e:
@@ -143,5 +127,4 @@ if __name__ == "__main__":
     structurer = TranscriptStructurer()
     transcript_path = "transcripts/O2_ROLywXrM.txt"
     structured_text = structurer.structure_transcript(transcript_path)
-    structurer.save_structured_data(structured_text, "questions/questions.json")
-    
+    structurer.save_structured_data(structured_text, "questions/questions.txt")

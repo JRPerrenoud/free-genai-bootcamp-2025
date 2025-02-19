@@ -5,7 +5,7 @@ from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFoun
 import os
 
 class YouTubeTranscriptDownloader:
-    def __init__(self, languages: List[str] = ["en-US", "en"]):
+    def __init__(self, languages: List[str] = ["es", "es-ES", "es-419"]):
         self.languages = languages
 
     def extract_video_id(self, url: str) -> Optional[str]:
@@ -66,12 +66,12 @@ class YouTubeTranscriptDownloader:
             
             # Try to get transcript
             try:
-                transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['en-US'])
-                print("Using en-US transcript")
+                transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['es'])
+                print("Using es transcript")
                 return transcript
             except NoTranscriptFound:
-                print("Falling back to general English transcript")
-                return YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+                print("Falling back to general Spanish transcript")
+                return YouTubeTranscriptApi.get_transcript(video_id, languages=['es-ES'])
                 
         except requests.Timeout:
             print("Error: Request timed out while checking video availability")
