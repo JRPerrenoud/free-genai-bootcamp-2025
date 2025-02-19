@@ -143,5 +143,5 @@ if __name__ == "__main__":
     structurer = TranscriptStructurer()
     transcript_path = "transcripts/O2_ROLywXrM.txt"
     structured_text = structurer.structure_transcript(transcript_path)
-    structurer.save_structured_data(structured_text, "questions.json")
+    structurer.save_structured_data(structured_text, "questions/questions.json")
     
