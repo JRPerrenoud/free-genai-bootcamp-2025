@@ -374,6 +374,8 @@ def render_interactive_stage():
                     st.success("¡Correcto! 🎉")
                 else:
                     st.error("Incorrecto")
+                    correct_option = st.session_state.current_question["options"][st.session_state.current_question["correct_answer"]]
+                    st.warning(f"La respuesta correcta es: {correct_option}")
                 
                 # Show feedback
                 st.info(feedback)
