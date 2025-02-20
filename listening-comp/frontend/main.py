@@ -3,15 +3,35 @@ from typing import Dict
 import json
 from collections import Counter
 import re
-
 import sys
 import os
+from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.get_transcript import YouTubeTranscriptDownloader
-
 from backend.chat import BedrockChat
+from interactive_learning import InteractiveLearning
 
+# Constants
+QUESTIONS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'saved_questions.json')
+
+# Ensure data directory exists
+os.makedirs(os.path.dirname(QUESTIONS_FILE), exist_ok=True)
+
+def load_saved_questions():
+    """Load questions from JSON file"""
+    if os.path.exists(QUESTIONS_FILE):
+        try:
+            with open(QUESTIONS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return []
+    return []
+
+def save_questions_to_file(questions):
+    """Save questions to JSON file"""
+    with open(QUESTIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(questions, f, ensure_ascii=False, indent=2)
 
 # Page config
 st.set_page_config(
@@ -25,6 +45,14 @@ if 'transcript' not in st.session_state:
     st.session_state.transcript = None
 if 'messages' not in st.session_state:
     st.session_state.messages = []
+if 'saved_questions' not in st.session_state:
+    st.session_state.saved_questions = load_saved_questions()
+if 'current_question' not in st.session_state:
+    st.session_state.current_question = None
+if 'selected_answer' not in st.session_state:
+    st.session_state.selected_answer = None
+if 'question_timestamp' not in st.session_state:
+    st.session_state.question_timestamp = 0
 
 def render_header():
     """Render the header section"""    
@@ -305,82 +333,135 @@ def render_interactive_stage():
         from question_generator import QuestionGenerator
         st.session_state.question_generator = QuestionGenerator()
     
-    if 'current_question' not in st.session_state:
-        st.session_state.current_question = None
+    # Create two columns - main content and saved questions
+    main_col, sidebar_col = st.columns([3, 1])
     
-    # Practice type selection
-    practice_type = st.selectbox(
-        "Select Practice Type",
-        [
-            "Conversación (Dialogue Comprehension)", 
-            "Vocabulario (Vocabulary Practice)", 
-            "Comprensión Auditiva (Listening Skills)",
-            "Situaciones Cotidianas (Daily Situations)",
-            "Gramática en Contexto (Grammar in Context)"
-        ]
-    )
-    
-    # Generate new question button
-    if st.button("Generate New Question"):
-        with st.spinner("Generating question..."):
-            st.session_state.current_question = st.session_state.question_generator.generate_question(practice_type)
-            st.session_state.selected_answer = None
-    
-    if st.session_state.current_question:
-        col1, col2 = st.columns([2, 1])
+    with main_col:
+        # Practice type selection
+        practice_type = st.selectbox(
+            "Select Practice Type",
+            [
+                "Conversación (Dialogue Comprehension)", 
+                "Vocabulario (Vocabulary Practice)", 
+                "Comprensión Auditiva (Listening Skills)",
+                "Situaciones Cotidianas (Daily Situations)",
+                "Gramática en Contexto (Grammar in Context)"
+            ]
+        )
         
-        with col1:
-            st.subheader("Practice Scenario")
-            # Show introduction and conversation
-            st.info(st.session_state.current_question["introduction"])
-            st.text_area("Conversation", st.session_state.current_question["conversation"], height=200)
-            
-            # Show question and options
-            st.write("**" + st.session_state.current_question["question"] + "**")
-            
-            # Initialize answer selection in session state if not exists
-            if 'selected_answer' not in st.session_state:
-                st.session_state.selected_answer = None
-            
-            # Create radio buttons with no default selection
-            options = st.session_state.current_question["options"]
-            selected = st.radio(
-                "Choose your answer:",
-                options,
-                index=None,  # No default selection
-                key=f"answer_radio_{hash(str(options))}"  # Unique key to force refresh
-            )
-            
-            # Get selected index
-            if selected:
-                selected_index = options.index(selected)
-                st.session_state.selected_answer = selected_index
+        # Generate new question button
+        if st.button("Generate New Question"):
+            with st.spinner("Generating question..."):
+                new_question = st.session_state.question_generator.generate_question(practice_type)
+                if new_question:
+                    new_question["practice_type"] = practice_type
+                    new_question["id"] = len(st.session_state.saved_questions)
+                    st.session_state.current_question = new_question
+                    st.session_state.selected_answer = None
+                    # Only save if it's not already in saved_questions
+                    if not any(q.get("introduction") == new_question["introduction"] for q in st.session_state.saved_questions):
+                        st.session_state.saved_questions.append(new_question)
+                        # Save to file
+                        save_questions_to_file(st.session_state.saved_questions)
         
-        with col2:
-            st.subheader("Audio")
-            # TODO: Implement text-to-speech for the conversation
-            st.info("Audio feature coming soon!")
+        # Display current question
+        if st.session_state.current_question:
+            col1, col2 = st.columns([2, 1])
             
-            st.subheader("Feedback")
-            if st.session_state.selected_answer is not None:
-                feedback = st.session_state.question_generator.get_feedback(
-                    st.session_state.current_question,
-                    st.session_state.selected_answer
+            with col1:
+                st.subheader("Practice Scenario")
+                # Show introduction and conversation
+                st.info(st.session_state.current_question["introduction"])
+                st.text_area("Conversation", st.session_state.current_question["conversation"], height=200)
+                
+                # Show question and options
+                st.write("**" + st.session_state.current_question["question"] + "**")
+                
+                # Create radio buttons with no default selection
+                options = st.session_state.current_question["options"]
+                radio_key = f"answer_radio_{st.session_state.question_timestamp}"
+                selected = st.radio(
+                    "Choose your answer:",
+                    options,
+                    index=None,  # No default selection
+                    key=radio_key
                 )
                 
-                # Show if answer is correct
-                is_correct = st.session_state.selected_answer == st.session_state.current_question["correct_answer"]
-                if is_correct:
-                    st.success("¡Correcto! 🎉")
-                else:
-                    st.error("Incorrecto")
-                    correct_option = st.session_state.current_question["options"][st.session_state.current_question["correct_answer"]]
-                    st.warning(f"La respuesta correcta es: {correct_option}")
+                # Get selected index
+                if selected:
+                    st.session_state.selected_answer = options.index(selected)
+                    # Store the selected answer in the current question too
+                    st.session_state.current_question["selected_answer"] = st.session_state.selected_answer
+            
+            with col2:
+                st.subheader("Audio")
+                # TODO: Implement text-to-speech for the conversation
+                st.info("Audio feature coming soon!")
                 
-                # Show feedback
-                st.info(feedback)
-    else:
-        st.info("Click 'Generate New Question' to start practicing!")
+                st.subheader("Feedback")
+                if st.session_state.selected_answer is not None:
+                    feedback = st.session_state.question_generator.get_feedback(
+                        st.session_state.current_question,
+                        st.session_state.selected_answer
+                    )
+                    
+                    # Show if answer is correct
+                    is_correct = st.session_state.selected_answer == st.session_state.current_question["correct_answer"]
+                    if is_correct:
+                        st.success("¡Correcto! 🎉")
+                    else:
+                        st.error("Incorrecto")
+                        correct_option = st.session_state.current_question["options"][st.session_state.current_question["correct_answer"]]
+                        st.warning(f"La respuesta correcta es: {correct_option}")
+                    
+                    # Show feedback
+                    st.info(feedback)
+        else:
+            st.info("Click 'Generate New Question' to start practicing!")
+    
+    # Render saved questions in sidebar
+    with sidebar_col:
+        st.subheader("Previous Questions")
+        
+        # Add reset button with single confirmation
+        if st.session_state.saved_questions:  # Only show if there are questions to delete
+            if st.button("Reset Question History", type="primary", key="reset_btn"):
+                st.session_state.saved_questions = []
+                save_questions_to_file([])  # Clear the file
+                st.session_state.current_question = None
+                st.session_state.selected_answer = None
+                st.success("Question history has been reset!")
+                st.rerun()
+        
+        if not st.session_state.saved_questions:
+            st.info("No previous questions yet. Generate some questions to see them here!")
+        else:
+            # Group questions by practice type
+            questions_by_type = {}
+            for question in st.session_state.saved_questions:
+                practice_type = question.get("practice_type", "Other")
+                if practice_type not in questions_by_type:
+                    questions_by_type[practice_type] = []
+                questions_by_type[practice_type].append(question)
+            
+            # Display questions grouped by type
+            for practice_type, questions in questions_by_type.items():
+                with st.expander(f"📚 {practice_type} ({len(questions)})", expanded=False):
+                    for question in questions:
+                        preview = question.get("introduction", "")[:100]
+                        if len(question.get("introduction", "")) > 100:
+                            preview += "..."
+                        st.write(preview)
+                        if st.button("Load Question", key=f"load_q_{question['id']}"):
+                            # Load question but reset the answer state
+                            loaded_question = question.copy()
+                            loaded_question["selected_answer"] = None  # Reset answer
+                            st.session_state.current_question = loaded_question
+                            st.session_state.selected_answer = None
+                            # Update timestamp to force new radio button key
+                            st.session_state.question_timestamp = int(datetime.now().timestamp() * 1000)
+                            st.rerun()
+                        st.markdown("---")
 
 def main():
     render_header()
