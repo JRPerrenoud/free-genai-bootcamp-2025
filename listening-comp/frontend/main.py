@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.get_transcript import YouTubeTranscriptDownloader
 from backend.chat import BedrockChat
+from backend.audio_generator import AudioGenerator
 from interactive_learning import InteractiveLearning
 
 # Constants
@@ -53,6 +54,8 @@ if 'selected_answer' not in st.session_state:
     st.session_state.selected_answer = None
 if 'question_timestamp' not in st.session_state:
     st.session_state.question_timestamp = 0
+if 'audio_generator' not in st.session_state:
+    st.session_state.audio_generator = AudioGenerator()
 
 def render_header():
     """Render the header section"""    
@@ -395,8 +398,38 @@ def render_interactive_stage():
             
             with col2:
                 st.subheader("Audio")
-                # TODO: Implement text-to-speech for the conversation
-                st.info("Audio feature coming soon!")
+                
+                if st.session_state.current_question:
+                    # Check if audio already exists
+                    audio_path = st.session_state.audio_generator.get_cached_audio_path(st.session_state.current_question)
+                    st.write("Debug - Checking audio path:", audio_path)
+                    
+                    if audio_path and os.path.exists(audio_path):
+                        # Show audio player if file exists
+                        st.write("Debug - Found existing audio file")
+                        with open(audio_path, "rb") as audio_file:
+                            audio_bytes = audio_file.read()
+                        st.audio(audio_bytes, format="audio/mp3")
+                    else:
+                        # Show generate button if no audio exists
+                        st.write("Debug - No existing audio found")
+                        if st.button("Generate Audio", key="gen_audio"):
+                            with st.spinner("Generating audio... This may take a minute..."):
+                                try:
+                                    st.write("Debug - Starting audio generation")
+                                    audio_path = st.session_state.audio_generator.generate_audio(st.session_state.current_question)
+                                    st.write("Debug - Audio generation complete:", audio_path)
+                                    if audio_path and os.path.exists(audio_path):
+                                        with open(audio_path, "rb") as audio_file:
+                                            audio_bytes = audio_file.read()
+                                        st.audio(audio_bytes, format="audio/mp3")
+                                        st.success("Audio generated successfully!")
+                                    else:
+                                        st.error("Failed to generate audio")
+                                except Exception as e:
+                                    st.error(f"Error generating audio: {str(e)}")
+                else:
+                    st.info("Generate or load a question to create audio")
                 
                 st.subheader("Feedback")
                 if st.session_state.selected_answer is not None:
