@@ -300,31 +300,85 @@ def render_interactive_stage():
     """Render the interactive learning stage"""
     st.header("Interactive Learning")
     
+    # Initialize question generator in session state if not exists
+    if 'question_generator' not in st.session_state:
+        from question_generator import QuestionGenerator
+        st.session_state.question_generator = QuestionGenerator()
+    
+    if 'current_question' not in st.session_state:
+        st.session_state.current_question = None
+    
     # Practice type selection
     practice_type = st.selectbox(
         "Select Practice Type",
-        ["Dialogue Practice", "Vocabulary Quiz", "Listening Exercise"]
+        [
+            "Conversación (Dialogue Comprehension)", 
+            "Vocabulario (Vocabulary Practice)", 
+            "Comprensión Auditiva (Listening Skills)",
+            "Situaciones Cotidianas (Daily Situations)",
+            "Gramática en Contexto (Grammar in Context)"
+        ]
     )
     
-    col1, col2 = st.columns([2, 1])
+    # Generate new question button
+    if st.button("Generate New Question"):
+        with st.spinner("Generating question..."):
+            st.session_state.current_question = st.session_state.question_generator.generate_question(practice_type)
+            st.session_state.selected_answer = None
     
-    with col1:
-        st.subheader("Practice Scenario")
-        # Placeholder for scenario
-        st.info("Practice scenario will appear here")
+    if st.session_state.current_question:
+        col1, col2 = st.columns([2, 1])
         
-        # Placeholder for multiple choice
-        options = ["Option 1", "Option 2", "Option 3", "Option 4"]
-        selected = st.radio("Choose your answer:", options)
+        with col1:
+            st.subheader("Practice Scenario")
+            # Show introduction and conversation
+            st.info(st.session_state.current_question["introduction"])
+            st.text_area("Conversation", st.session_state.current_question["conversation"], height=200)
+            
+            # Show question and options
+            st.write("**" + st.session_state.current_question["question"] + "**")
+            
+            # Initialize answer selection in session state if not exists
+            if 'selected_answer' not in st.session_state:
+                st.session_state.selected_answer = None
+            
+            # Create radio buttons with no default selection
+            options = st.session_state.current_question["options"]
+            selected = st.radio(
+                "Choose your answer:",
+                options,
+                index=None,  # No default selection
+                key=f"answer_radio_{hash(str(options))}"  # Unique key to force refresh
+            )
+            
+            # Get selected index
+            if selected:
+                selected_index = options.index(selected)
+                st.session_state.selected_answer = selected_index
         
-    with col2:
-        st.subheader("Audio")
-        # Placeholder for audio player
-        st.info("Audio will appear here")
-        
-        st.subheader("Feedback")
-        # Placeholder for feedback
-        st.info("Feedback will appear here")
+        with col2:
+            st.subheader("Audio")
+            # TODO: Implement text-to-speech for the conversation
+            st.info("Audio feature coming soon!")
+            
+            st.subheader("Feedback")
+            if st.session_state.selected_answer is not None:
+                feedback = st.session_state.question_generator.get_feedback(
+                    st.session_state.current_question,
+                    st.session_state.selected_answer
+                )
+                
+                # Show if answer is correct
+                is_correct = st.session_state.selected_answer == st.session_state.current_question["correct_answer"]
+                if is_correct:
+                    st.success("¡Correcto! 🎉")
+                else:
+                    st.error("Incorrecto")
+                
+                # Show feedback
+                st.info(feedback)
+    else:
+        st.info("Click 'Generate New Question' to start practicing!")
 
 def main():
     render_header()

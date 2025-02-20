@@ -100,10 +100,23 @@ class QuestionVectorStore:
     def _get_or_create_collection(self):
         """Get or create the collection, resetting if dimensions mismatch"""
         try:
-            return self.client.get_or_create_collection(
-                name="dele_questions",
-                embedding_function=self.embedding_function
-            )
+            # Try to get existing collection
+            try:
+                collection = self.client.get_collection(
+                    name="dele_questions",
+                    embedding_function=self.embedding_function
+                )
+                print("Found existing collection")
+                return collection
+            except Exception as e:
+                if "does not exist" in str(e):
+                    print("Collection does not exist, creating new one...")
+                    return self.client.create_collection(
+                        name="dele_questions",
+                        embedding_function=self.embedding_function
+                    )
+                raise
+                
         except Exception as e:
             if "dimension" in str(e).lower():
                 print("Dimension mismatch detected. Resetting collection...")
@@ -112,7 +125,9 @@ class QuestionVectorStore:
                     name="dele_questions",
                     embedding_function=self.embedding_function
                 )
-            raise
+            else:
+                print(f"Unexpected error with collection: {str(e)}")
+                raise
 
     def reset_store(self):
         """Reset the vector store by deleting and recreating it"""
@@ -148,28 +163,44 @@ class QuestionVectorStore:
 
     def find_similar_questions(self, query: str, n_results: int = 5) -> Dict:
         """Find similar questions based on semantic search"""
-        results = self.collection.query(
-            query_texts=[query],
-            n_results=n_results,
-            include=["metadatas", "distances"]
-        )
-        
-        # Format results for better readability
-        formatted_results = {
-            'ids': results['ids'][0],
-            'documents': [],
-            'distances': results['distances'][0]
-        }
-        
-        for metadata in results['metadatas'][0]:
-            formatted_doc = (
-                f"Introduction:\n{metadata['introduction']}\n\n"
-                f"Conversation:\n{metadata['conversation']}\n\n"
-                f"Question:\n{metadata['question']}"
+        try:
+            # Check if collection is empty
+            all_ids = self.collection.get()['ids']
+            if not all_ids:
+                print("Vector store is empty - no questions found")
+                return None
+                
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=min(n_results, len(all_ids)),  # Don't request more results than we have
+                include=["metadatas", "distances"]
             )
-            formatted_results['documents'].append(formatted_doc)
-        
-        return formatted_results
+            
+            # Check if we got any results
+            if not results['ids'][0]:
+                print("No similar questions found for query")
+                return None
+            
+            # Format results for better readability
+            formatted_results = {
+                'ids': results['ids'][0],
+                'documents': [],
+                'distances': results['distances'][0]
+            }
+            
+            for metadata in results['metadatas'][0]:
+                formatted_doc = (
+                    f"Introduction:\n{metadata['introduction']}\n\n"
+                    f"Conversation:\n{metadata['conversation']}\n\n"
+                    f"Question:\n{metadata['question']}"
+                )
+                formatted_results['documents'].append(formatted_doc)
+            
+            return formatted_results
+            
+        except Exception as e:
+            print(f"Error searching vector store: {str(e)}")
+            return None
 
     def bulk_add_questions(self, questions: List[DELEQuestion]) -> List[str]:
         """Add multiple questions at once and return their IDs"""

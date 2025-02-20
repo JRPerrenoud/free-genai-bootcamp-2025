@@ -170,3 +170,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 backend/Miniconda3-latest-Linux-x86_64.sh
+
+
+# Database files
+*.sqlite3
