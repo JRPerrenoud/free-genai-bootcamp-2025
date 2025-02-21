@@ -1,0 +1,62 @@
+[
+  {
+    "introduction": "En esta práctica, vas a escuchar una conversación entre dos amigos que están planeando sus vacaciones. Tu tarea es entender la conversación y responder a una pregunta sobre ella.",
+    "conversation": "—Hola, María. ¿Ya has decidido dónde vas a ir de vacaciones?\n—Hola, Juan. Sí, he decidido ir a la playa con mis amigos. ¿Tú dónde vas a ir?\n—Yo todavía no lo he decidido. Me gustaría ir a un lugar tranquilo, pero no sé si ir al campo o a un pueblo pequeño en la montaña.\n—Quizás podrías ir a ambos lugares. Primero al campo y después a la montaña.\n—Esa es una buena idea. Creo que me gusta más la idea de ir a la montaña.",
+    "question": "¿Adónde decide ir María de vacaciones?",
+    "options": [
+      "La ciudad",
+      "La playa",
+      "El campo",
+      "La montaña"
+    ],
+    "correct_answer": 1,
+    "feedback": {
+      "0": "Incorrecto. María no menciona ir a la ciudad en la conversación.",
+      "1": "Correcto. En la conversación, María dice que ha decidido ir a la playa con sus amigos.",
+      "2": "Incorrecto. María no decide ir al campo en la conversación.",
+      "3": "Incorrecto. María no decide ir a la montaña en la conversación."
+    },
+    "practice_type": "Conversación (Dialogue Comprehension)",
+    "id": 0
+  },
+  {
+    "introduction": "En esta práctica, escuchas una conversación entre amigos que están planeando un fin de semana en la playa. Tu objetivo es entender el diálogo y responder a una pregunta sobre la conversación.",
+    "conversation": "—¡Hola, Carlos! ¿Has decidido cuándo iremos a la playa?\n—Hola, Ana. Sí, creo que el sábado es el mejor día. ¿Tú qué opinas?\n—El sábado suena bien. ¿Podríamos llevar unas toallas y algo de comer?\n—Claro, también podemos llevar unas bebidas para refrescarnos.",
+    "question": "¿Qué día sugiere Carlos para ir a la playa?",
+    "options": [
+      "Sábado",
+      "Miércoles",
+      "Domingo",
+      "Lunes"
+    ],
+    "correct_answer": 0,
+    "feedback": {
+      "0": "Correcto. Carlos sugiere el sábado para ir a la playa según la conversación.",
+      "1": "Incorrecto. No se menciona el miércoles en la conversación.",
+      "2": "Incorrecto. No se menciona el domingo en la conversación.",
+      "3": "Incorrecto. No se menciona el lunes en la conversación."
+    },
+    "practice_type": "Conversación (Dialogue Comprehension)",
+    "id": 1
+  },
+  {
+    "introduction": "Hoy vamos a practicar la conjugación de los verbos en el presente. Esta práctica ayudará a entender cómo se forman y se usan en una conversación cotidiana.",
+    "conversation": "¡Hola, María! ¿Cómo estás hoy? \n\nHola, Juan. Estoy bien, gracias. ¿Y tú? \n\nEstoy muy bien. ¿Qué haces después de clases? \n\nDespués de clases, voy a la biblioteca para estudiar. ¿Tú también estudias mucho?\n\n[CORRECT] Sí, estudio mucho. Tengo un examen la próxima semana.",
+    "question": "¿Qué verbo se usa en la última frase de la conversación?",
+    "options": [
+      "comer",
+      "dormir",
+      "vivir",
+      "estudio"
+    ],
+    "correct_answer": 3,
+    "feedback": {
+      "0": "El verbo 'comer' no está relacionado con la acción de estudiar en el contexto dado.",
+      "1": "El verbo 'dormir' no se relaciona con el propósito de estudiar para un examen.",
+      "2": "El verbo 'vivir' no se aplica al contexto de estudiar para un examen.",
+      "3": "La opción correcta es 'estudio' porque se usa la conjugación del verbo 'estudiar' en presente, que coincide con el contexto de la conversación."
+    },
+    "practice_type": "Gramática en Contexto (Grammar in Context)",
+    "id": 2
+  }
+]
