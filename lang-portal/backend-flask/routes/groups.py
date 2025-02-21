@@ -3,7 +3,7 @@ from flask_cors import cross_origin
 import json
 
 def load(app):
-  @app.route('/groups', methods=['GET'])
+  @app.route('/api/groups', methods=['GET'])
   @cross_origin()
   def get_groups():
     try:
@@ -58,7 +58,7 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  @app.route('/groups/<int:id>', methods=['GET'])
+  @app.route('/api/groups/<int:id>', methods=['GET'])
   @cross_origin()
   def get_group(id):
     try:
@@ -83,7 +83,7 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  @app.route('/groups/<int:id>/words', methods=['GET'])
+  @app.route('/api/groups/<int:id>/words', methods=['GET'])
   @cross_origin()
   def get_group_words(id):
     try:
@@ -95,13 +95,13 @@ def load(app):
       offset = (page - 1) * words_per_page
 
       # Get sorting parameters
-      sort_by = request.args.get('sort_by', 'kanji')
+      sort_by = request.args.get('sort_by', 'english')
       order = request.args.get('order', 'asc')
 
       # Validate sort parameters
-      valid_columns = ['kanji', 'romaji', 'english', 'correct_count', 'wrong_count']
+      valid_columns = ['english', 'spanish', 'correct_count', 'wrong_count']
       if sort_by not in valid_columns:
-        sort_by = 'kanji'
+        sort_by = 'english'
       if order not in ['asc', 'desc']:
         order = 'asc'
 
@@ -113,7 +113,7 @@ def load(app):
 
       # Query to fetch words with pagination and sorting
       cursor.execute(f'''
-        SELECT w.*, 
+        SELECT w.id, w.english, w.spanish, 
                COALESCE(wr.correct_count, 0) as correct_count,
                COALESCE(wr.wrong_count, 0) as wrong_count
         FROM words w
@@ -140,9 +140,8 @@ def load(app):
       for word in words:
         words_data.append({
           "id": word["id"],
-          "kanji": word["kanji"],
-          "romaji": word["romaji"],
           "english": word["english"],
+          "spanish": word["spanish"],
           "correct_count": word["correct_count"],
           "wrong_count": word["wrong_count"]
         })
@@ -155,9 +154,49 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  # todo GET /groups/:id/words/raw
+  @app.route('/api/groups/<id>/words/raw', methods=['GET'])
+  @cross_origin()
+  def get_group_words_raw(id):
+    try:
+      cursor = app.db.cursor()
 
-  @app.route('/groups/<int:id>/study_sessions', methods=['GET'])
+      # Verify group exists
+      cursor.execute('SELECT id FROM groups WHERE id = ?', (id,))
+      group = cursor.fetchone()
+      if not group:
+        return jsonify({"error": "Group not found"}), 404
+
+      # Get all words for the group without pagination
+      cursor.execute('''
+        SELECT 
+          w.id,
+          w.english,
+          w.spanish,
+          COALESCE(wr.correct_count, 0) as correct_count,
+          COALESCE(wr.wrong_count, 0) as wrong_count
+        FROM words w
+        JOIN word_groups wg ON w.id = wg.word_id
+        LEFT JOIN word_reviews wr ON w.id = wr.word_id
+        WHERE wg.group_id = ?
+        ORDER BY w.english
+      ''', (id,))
+      
+      words = cursor.fetchall()
+      
+      return jsonify({
+        'words': [{
+          'id': word['id'],
+          'english': word['english'],
+          'spanish': word['spanish'],
+          'correct_count': word['correct_count'],
+          'wrong_count': word['wrong_count']
+        } for word in words]
+      })
+
+    except Exception as e:
+      return jsonify({"error": str(e)}), 500
+
+  @app.route('/api/groups/<int:id>/study_sessions', methods=['GET'])
   @cross_origin()
   def get_group_study_sessions(id):
     try:

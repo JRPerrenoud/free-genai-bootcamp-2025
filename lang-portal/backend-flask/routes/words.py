@@ -18,42 +18,66 @@ def load(app):
       offset = (page - 1) * words_per_page
 
       # Get sorting parameters from the query string
-      sort_by = request.args.get('sort_by', 'kanji')  # Default to sorting by 'kanji'
+      sort_by = request.args.get('sort_by', 'english')  # Default to sorting by 'english'
       order = request.args.get('order', 'asc')  # Default to ascending order
+      group = request.args.get('group')  # Get group filter
 
       # Validate sort_by and order
-      valid_columns = ['kanji', 'romaji', 'english', 'correct_count', 'wrong_count']
+      valid_columns = ['english', 'spanish', 'correct_count', 'wrong_count']
       if sort_by not in valid_columns:
-        sort_by = 'kanji'
+        sort_by = 'english'
       if order not in ['asc', 'desc']:
         order = 'asc'
 
-      # Query to fetch words with sorting
-      cursor.execute(f'''
-        SELECT w.id, w.kanji, w.romaji, w.english, 
+      # Base query for words
+      base_query = '''
+        SELECT DISTINCT w.id, w.english, w.spanish, 
             COALESCE(r.correct_count, 0) AS correct_count,
             COALESCE(r.wrong_count, 0) AS wrong_count
         FROM words w
         LEFT JOIN word_reviews r ON w.id = r.word_id
-        ORDER BY {sort_by} {order}
-        LIMIT ? OFFSET ?
-      ''', (words_per_page, offset))
+      '''
 
-      words = cursor.fetchall()
+      # Base query for count
+      count_query = '''
+        SELECT COUNT(DISTINCT w.id)
+        FROM words w
+      '''
 
-      # Query the total number of words
-      cursor.execute('SELECT COUNT(*) FROM words')
+      # Add group filter if specified
+      params = []
+      if group:
+        group_join = '''
+          JOIN word_groups wg ON w.id = wg.word_id
+          JOIN groups g ON wg.group_id = g.id
+          WHERE g.name = ?
+        '''
+        base_query += group_join
+        count_query += group_join
+        params.append(group)
+
+      # Add sorting and pagination to the base query
+      base_query += f' ORDER BY {sort_by} {order} LIMIT ? OFFSET ?'
+      params_with_limit = params.copy()
+      params_with_limit.extend([words_per_page, offset])
+
+      # Get total words count
+      cursor.execute(count_query, params)
       total_words = cursor.fetchone()[0]
       total_pages = (total_words + words_per_page - 1) // words_per_page
+
+      # Get words for current page
+      cursor.execute(base_query, params_with_limit)
+
+      words = cursor.fetchall()
 
       # Format the response
       words_data = []
       for word in words:
         words_data.append({
           "id": word["id"],
-          "kanji": word["kanji"],
-          "romaji": word["romaji"],
           "english": word["english"],
+          "spanish": word["spanish"],
           "correct_count": word["correct_count"],
           "wrong_count": word["wrong_count"]
         })
@@ -79,7 +103,7 @@ def load(app):
       
       # Query to fetch the word and its details
       cursor.execute('''
-        SELECT w.id, w.kanji, w.romaji, w.english,
+        SELECT w.id, w.english, w.spanish,
                COALESCE(r.correct_count, 0) AS correct_count,
                COALESCE(r.wrong_count, 0) AS wrong_count,
                GROUP_CONCAT(DISTINCT g.id || '::' || g.name) as groups
@@ -99,24 +123,24 @@ def load(app):
       # Parse the groups string into a list of group objects
       groups = []
       if word["groups"]:
-        for group_str in word["groups"].split(','):
-          group_id, group_name = group_str.split('::')
+        group_strings = word["groups"].split(',')
+        for group_string in group_strings:
+          group_id, group_name = group_string.split('::')
           groups.append({
             "id": int(group_id),
             "name": group_name
           })
       
       return jsonify({
-        "word": {
-          "id": word["id"],
-          "kanji": word["kanji"],
-          "romaji": word["romaji"],
-          "english": word["english"],
-          "correct_count": word["correct_count"],
-          "wrong_count": word["wrong_count"],
-          "groups": groups
-        }
+        "id": word["id"],
+        "english": word["english"],
+        "spanish": word["spanish"],
+        "correct_count": word["correct_count"],
+        "wrong_count": word["wrong_count"],
+        "groups": groups
       })
       
     except Exception as e:
       return jsonify({"error": str(e)}), 500
+    finally:
+      app.db.close()

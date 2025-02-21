@@ -4,7 +4,6 @@ from datetime import datetime
 import math
 
 def load(app):
-  # todo /study_sessions POST
 
   @app.route('/api/study-sessions', methods=['GET'])
   @cross_origin()
@@ -65,6 +64,79 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
+  @app.route('/api/study-sessions', methods=['POST'])
+  @cross_origin()
+  def create_study_session():
+    try:
+      # Get request data
+      data = request.get_json()
+      if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+      # Validate required fields
+      group_id = data.get('group_id')
+      study_activity_id = data.get('study_activity_id')
+      
+      if not group_id or not study_activity_id:
+        return jsonify({"error": "group_id and study_activity_id are required"}), 400
+
+      cursor = app.db.cursor()
+
+      # Verify group exists
+      cursor.execute('SELECT name FROM groups WHERE id = ?', (group_id,))
+      group = cursor.fetchone()
+      if not group:
+        return jsonify({"error": "Group not found"}), 404
+
+      # Verify study activity exists
+      cursor.execute('SELECT name FROM study_activities WHERE id = ?', (study_activity_id,))
+      activity = cursor.fetchone()
+      if not activity:
+        return jsonify({"error": "Study activity not found"}), 404
+
+      # Create new study session
+      cursor.execute('''
+        INSERT INTO study_sessions (group_id, study_activity_id)
+        VALUES (?, ?)
+      ''', (group_id, study_activity_id))
+      
+      session_id = cursor.lastrowid
+      app.db.commit()
+
+      # Get the created session details
+      cursor.execute('''
+        SELECT 
+          ss.id,
+          ss.group_id,
+          g.name as group_name,
+          sa.id as activity_id,
+          sa.name as activity_name,
+          ss.created_at,
+          COUNT(wri.id) as review_items_count
+        FROM study_sessions ss
+        JOIN groups g ON g.id = ss.group_id
+        JOIN study_activities sa ON sa.id = ss.study_activity_id
+        LEFT JOIN word_review_items wri ON wri.study_session_id = ss.id
+        WHERE ss.id = ?
+        GROUP BY ss.id
+      ''', (session_id,))
+      
+      session = cursor.fetchone()
+
+      return jsonify({
+        'id': session['id'],
+        'group_id': session['group_id'],
+        'group_name': session['group_name'],
+        'activity_id': session['activity_id'],
+        'activity_name': session['activity_name'],
+        'start_time': session['created_at'],
+        'review_items_count': session['review_items_count']
+      }), 201
+
+    except Exception as e:
+      app.db.rollback()
+      return jsonify({"error": str(e)}), 500
+
   @app.route('/api/study-sessions/<id>', methods=['GET'])
   @cross_origin()
   def get_study_session(id):
@@ -108,7 +180,7 @@ def load(app):
         JOIN word_review_items wri ON wri.word_id = w.id
         WHERE wri.study_session_id = ?
         GROUP BY w.id
-        ORDER BY w.kanji
+        ORDER BY w.spanish
         LIMIT ? OFFSET ?
       ''', (id, per_page, offset))
       
@@ -137,8 +209,7 @@ def load(app):
         },
         'words': [{
           'id': word['id'],
-          'kanji': word['kanji'],
-          'romaji': word['romaji'],
+          'spanish': word['spanish'],
           'english': word['english'],
           'correct_count': word['session_correct_count'],
           'wrong_count': word['session_wrong_count']
@@ -151,7 +222,76 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  # todo POST /study_sessions/:id/review
+  @app.route('/api/study-sessions/<id>/review', methods=['POST'])
+  @cross_origin()
+  def submit_session_review(id):
+    try:
+      data = request.get_json()
+      if not data or 'words' not in data:
+        return jsonify({"error": "No word review data provided"}), 400
+
+      cursor = app.db.cursor()
+
+      # Verify session exists
+      cursor.execute('SELECT id FROM study_sessions WHERE id = ?', (id,))
+      session = cursor.fetchone()
+      if not session:
+        return jsonify({"error": "Study session not found"}), 404
+
+      # Begin transaction for word reviews
+      cursor.execute('BEGIN TRANSACTION')
+
+      try:
+        # Process each word review
+        for word_review in data['words']:
+          word_id = word_review.get('word_id')
+          correct = word_review.get('correct')
+
+          if word_id is None or correct is None:
+            raise ValueError("Invalid word review data")
+
+          # Check if word review exists
+          cursor.execute('SELECT word_id FROM word_reviews WHERE word_id = ?', (word_id,))
+          review_exists = cursor.fetchone()
+
+          if review_exists:
+            # Update existing review
+            cursor.execute('''
+              UPDATE word_reviews 
+              SET correct_count = correct_count + ?,
+                  wrong_count = wrong_count + ?
+              WHERE word_id = ?
+            ''', (
+              1 if correct else 0,
+              0 if correct else 1,
+              word_id
+            ))
+          else:
+            # Insert new review
+            cursor.execute('''
+              INSERT INTO word_reviews (word_id, correct_count, wrong_count)
+              VALUES (?, ?, ?)
+            ''', (
+              word_id,
+              1 if correct else 0,
+              0 if correct else 1
+            ))
+
+          # Add review item to session
+          cursor.execute('''
+            INSERT INTO word_review_items (study_session_id, word_id, correct)
+            VALUES (?, ?, ?)
+          ''', (id, word_id, correct))
+
+        app.db.commit()
+        return jsonify({"message": "Review submitted successfully"}), 200
+
+      except Exception as e:
+        cursor.execute('ROLLBACK')
+        return jsonify({"error": str(e)}), 400
+
+    except Exception as e:
+      return jsonify({"error": str(e)}), 500
 
   @app.route('/api/study-sessions/reset', methods=['POST'])
   @cross_origin()
