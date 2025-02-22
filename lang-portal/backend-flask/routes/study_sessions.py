@@ -5,7 +5,7 @@ import math
 
 def load(app):
 
-  @app.route('/api/study-sessions', methods=['GET'])
+  @app.route('/api/study_sessions', methods=['GET'])
   @cross_origin()
   def get_study_sessions():
     try:
@@ -64,7 +64,7 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  @app.route('/api/study-sessions', methods=['POST'])
+  @app.route('/api/study_sessions', methods=['POST'])
   @cross_origin()
   def create_study_session():
     try:
@@ -137,7 +137,7 @@ def load(app):
       app.db.rollback()
       return jsonify({"error": str(e)}), 500
 
-  @app.route('/api/study-sessions/<id>', methods=['GET'])
+  @app.route('/api/study_sessions/<id>', methods=['GET'])
   @cross_origin()
   def get_study_session(id):
     try:
@@ -222,7 +222,7 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  @app.route('/api/study-sessions/<id>/review', methods=['POST'])
+  @app.route('/api/study_sessions/<id>/review', methods=['POST'])
   @cross_origin()
   def submit_session_review(id):
     try:
@@ -293,7 +293,7 @@ def load(app):
     except Exception as e:
       return jsonify({"error": str(e)}), 500
 
-  @app.route('/api/study-sessions/reset', methods=['POST'])
+  @app.route('/api/study_sessions/reset', methods=['POST'])
   @cross_origin()
   def reset_study_sessions():
     try:

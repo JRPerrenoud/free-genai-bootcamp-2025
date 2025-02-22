@@ -3,26 +3,26 @@
 ## Here's a complete list of all endpoints in the backend server:
 
 ### Words Routes (/routes/words.py):
-GET /words - Get paginated list of words with optional group filtering and sorting
-GET /words/<id> - Get a single word with its details and groups
+GET /api/words - Get paginated list of words with optional group filtering and sorting
+GET /api/words/<id> - Get a single word with its details and groups
 
 ### Groups Routes (/routes/groups.py):
-GET /groups - Get paginated list of groups with sorting
-GET /groups/<id> - Get a single group's details
-GET /groups/<id>/words - Get paginated list of words in a group
-GET /groups/<id>/study_sessions - Get study sessions for a group
+GET /api/groups - Get paginated list of groups with sorting
+GET /api/groups/<id> - Get a single group's details
+GET /api/groups/<id>/words - Get paginated list of words in a group
+GET /api/groups/<id>/study_sessions - Get study sessions for a group
 
 ### Study Activities Routes (/routes/study_activities.py):
-GET /api/study-activities - Get list of all study activities
-GET /api/study-activities/<id> - Get details of a single study activity
-GET /api/study-activities/<id>/sessions - Get study sessions for an activity
-GET /api/study-activities/<id>/launch - Get launch data for an activity
+GET /api/study_activities - Get list of all study activities
+GET /api/study_activities/<id> - Get details of a single study activity
+GET /api/study_activities/<id>/sessions - Get study sessions for an activity
+GET /api/study_activities/<id>/launch - Get launch data for an activity
 
 
 ### Study Sessions Routes (/routes/study_sessions.py):
-GET /api/study-sessions - Get paginated list of all study sessions
-GET /api/study-sessions/<id> - Get details of a single study session with reviewed words
-POST /api/study-sessions/reset - Reset all study session data
+GET /api/study_sessions - Get paginated list of all study sessions
+GET /api/study_sessions/<id> - Get details of a single study session with reviewed words
+POST /api/study_sessions/reset - Reset all study session data
 
 
 There are also some TODO endpoints noted in the code:
