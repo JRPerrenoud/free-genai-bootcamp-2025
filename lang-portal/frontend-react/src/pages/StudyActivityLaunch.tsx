@@ -54,46 +54,33 @@ export default function StudyActivityLaunch() {
       })
   }, [id, setCurrentStudyActivity])
 
-  // Clean up when unmounting
-  useEffect(() => {
-    return () => {
-      setCurrentStudyActivity(null)
+  const handleLaunch = () => {
+    if (!selectedGroup) {
+      setError('Please select a word group')
+      return
     }
-  }, [setCurrentStudyActivity])
 
-  const handleLaunch = async () => {
-    if (!launchData?.activity || !selectedGroup) return;
-    
-    try {
-      // Create a study session first
-      const result = await createStudySession(parseInt(selectedGroup), launchData.activity.id);
-      const sessionId = result.session_id;
-      
-      // Replace any instances of $group_id with the actual group id and add session_id
-      const launchUrl = new URL(launchData.activity.launch_url);
-      launchUrl.searchParams.set('group_id', selectedGroup);
-      launchUrl.searchParams.set('session_id', sessionId.toString());
-      
-      // Open the modified URL in a new tab
-      window.open(launchUrl.toString(), '_blank');
-      
-      // Navigate to the session show page
-      navigate(`/sessions/${sessionId}`);
-    } catch (error) {
-      console.error('Failed to launch activity:', error);
+    // For typing tutor, we'll open it in a new window with the group ID
+    if (launchData?.activity.title === 'Typing Tutor') {
+      const typingTutorUrl = new URL(launchData.activity.launch_url)
+      typingTutorUrl.searchParams.set('group_id', selectedGroup)
+      window.open(typingTutorUrl.toString(), '_blank')
+    } else {
+      // Handle other activities as before
+      window.open(launchData?.activity.launch_url, '_blank')
     }
   }
 
   if (loading) {
-    return <div className="text-center">Loading...</div>
+    return <div>Loading...</div>
   }
 
   if (error) {
-    return <div className="text-red-500">Error: {error}</div>
+    return <div className="text-red-500">{error}</div>
   }
 
   if (!launchData) {
-    return <div className="text-red-500">Activity not found</div>
+    return <div>No launch data available</div>
   }
 
   return (

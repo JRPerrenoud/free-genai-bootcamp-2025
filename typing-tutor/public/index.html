@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Japanese Kanji Typing Tutor</title>
+	<title>Spanish Language Typing Tutor</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
 
 	<style>
@@ -35,15 +35,15 @@
 		<script src="src/main/word_manager.js"></script>
 		<script src="src/main/skyline_block.js"></script>
 		<script src="src/main/missle.js"></script>
-		<script src="src/main/jp_word.js"></script>
-		<script src="src/main/jp_word_block.js"></script>
-		<script src="src/main/correction_jp_word.js"></script>
-		<script src="src/main/correction_jp_word_block.js"></script>
+		<script src="src/main/spanish_word.js"></script>
+		<script src="src/main/spanish_word_block.js"></script>
+		<script src="src/main/correction_spanish_word.js"></script>
+		<script src="src/main/correction_spanish_word_block.js"></script>
 		<script src="src/main/correction_box.js"></script>
 
 		<script src="src/review/review_border.js"></script>
-		<script src="src/review/review_jp_word.js"></script>
-		<script src="src/review/review_jp_word_block.js"></script>
+		<script src="src/review/review_spanish_word.js"></script>
+		<script src="src/review/review_spanish_word_block.js"></script>
 
 		<script src="src/scene_main.js"></script>
 		<script src="src/scene_review.js"></script>
@@ -51,7 +51,7 @@
 let Data;
 async function fetchWords(group_id) {
 	try {	
-		const apiUrl = `http://127.0.0.1:5000/groups/${group_id}/words/raw`;
+		const apiUrl = `http://127.0.0.1:5000/api/groups/${group_id}/words/raw`;
 		const response = await fetch(`${apiUrl}`);
 		Data = await response.json();
 	} catch (error) {

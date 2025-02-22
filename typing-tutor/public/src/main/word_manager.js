@@ -4,12 +4,12 @@ class WordManager {
 		this.last_word = { status: '', d_index: null }
 		this.active_words = []
 		this.words = [
-			new JpWord(this.scene),
-			new JpWord(this.scene),
-			new JpWord(this.scene),
-			new JpWord(this.scene),
-			new JpWord(this.scene),
-			new JpWord(this.scene)
+			new SpanishWord(this.scene),
+			new SpanishWord(this.scene),
+			new SpanishWord(this.scene),
+			new SpanishWord(this.scene),
+			new SpanishWord(this.scene),
+			new SpanishWord(this.scene)
 		];
 	}
 
@@ -137,13 +137,14 @@ class WordManager {
 
 		const word = this.words.find(w => w.falling === false)
 		if (word === undefined){
-			// do nothing because none are avaliable
+			// do nothing because none are available
 		} else {
 			word.set(data, d_index)
 		}
 		
-		// The longer the romaji the more time to get the word.
-		const delay = (1000 * word.romaji.length) + 1000
+		// Calculate delay based on Spanish word length
+		// Add extra time for longer words to give players more time to type
+		const delay = word ? (1000 * word.spanish.length) + 2000 : 3000
 		this.scene.addSpawnTimer(delay)
 	}
 

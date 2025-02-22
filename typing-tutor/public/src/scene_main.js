@@ -10,11 +10,11 @@ class SceneMain extends Phaser.Scene {
 		this.sound_files = []
     Data.words.forEach(data => {
 			const en = data.english.replace(/ /g,'_')
-			const jp = data.romaji
+			const es = data.spanish.replace(/ /g,'_')
 			this.sound_files.push(en)
-			this.sound_files.push(jp)
+			this.sound_files.push(es)
 			this.load.audio(en, `audio/en/${en}.mp3`);
-			this.load.audio(jp, `audio/jp/${jp}.mp3`);
+			this.load.audio(es, `audio/es/${es}.mp3`);
     });
 
 	}
@@ -57,8 +57,7 @@ class SceneMain extends Phaser.Scene {
 
 		this.userInput = '';
 		this.missle = new Missle(this);
-		this.show_romaji = false
-
+		
 		this.word_manager.spawn()
 
 
@@ -88,8 +87,10 @@ class SceneMain extends Phaser.Scene {
 		} else if (ev.key === 'Enter') {
 			this.fire()
 			return;
-		} else if ((ev.keyCode >= 65 && ev.keyCode <= 90) || ev.keyCode === 32) {
-			// Add character for letters and space
+		} else if ((ev.keyCode >= 65 && ev.keyCode <= 90) || ev.keyCode === 32 || 
+			// Add support for Spanish punctuation keys that might be used
+			ev.key === '.' || ev.key === ',' || ev.key === ';' || ev.key === '¿' || ev.key === '¡') {
+			// Add character for letters, space, and Spanish punctuation
 			this.userInput += ev.key.toLowerCase();
 		}
 		this.userText.setText(this.userInput);
@@ -111,10 +112,6 @@ class SceneMain extends Phaser.Scene {
 			callback: this.word_manager.spawn,
 			callbackScope: this.word_manager
 		})
-	}
-
-	showRomaji(){
-		return this.show_romaji
 	}
 
 	fire(){
@@ -139,8 +136,8 @@ class SceneMain extends Phaser.Scene {
 
 
 
-	hit(kanji_len,pos){
-		for (let i = 0; i < kanji_len; i++) {
+	hit(word_length, pos){
+		for (let i = 0; i < word_length; i++) {
 			this.skyline[pos+i].remove()
 		}
 	}

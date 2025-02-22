@@ -33,7 +33,7 @@ class Missle {
 		this.word.targeted = false
 		this.firing = false
 		this.reset_y_position()
-		this.scene.sound.play(this.word.romaji)
+		this.scene.sound.play(this.word.spanish)
 		_player_data.send_review(this.word.wordId,true)
 		this.word.remove()
 		this.scene.info_bar.add_score()

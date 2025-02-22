@@ -100,7 +100,11 @@
     "spanish": "amable"
   },
   {
-    "english": "near; close",
+    "english": "near",
+    "spanish": "cerca"
+  },
+  {
+    "english": "close",
     "spanish": "cerca"
   },
   {
@@ -148,7 +152,7 @@
     "spanish": "barato"
   },
   {
-    "english": "large/great",
+    "english": "large",
     "spanish": "grande"
   },
   {
@@ -190,10 +194,6 @@
   {
     "english": "painful",
     "spanish": "doloroso"
-  },
-  {
-    "english": "spread out",
-    "spanish": "extendido"
   },
   {
     "english": "bitter",

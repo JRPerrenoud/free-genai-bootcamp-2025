@@ -40,7 +40,7 @@
     "spanish": "venir"
   },
   {
-    "english": "to do/make",
+    "english": "to do",
     "spanish": "hacer"
   },
   {
@@ -76,8 +76,12 @@
     "spanish": "leer"
   },
   {
-    "english": "to hang; to call (phone)",
-    "spanish": "colgar; llamar"
+    "english": "to hang",
+    "spanish": "colgar"
+  },
+  {
+    "english": "to call",
+    "spanish": "llamar"
   },
   {
     "english": "to borrow",
@@ -104,14 +108,6 @@
     "spanish": "dar"
   },
   {
-    "english": "to meet/fit",
-    "spanish": "encontrar/ajustar"
-  },
-  {
-    "english": "to get off (vehicle)",
-    "spanish": "bajarse del vehículo"
-  },
-  {
     "english": "to start",
     "spanish": "empezar"
   },
@@ -120,16 +116,16 @@
     "spanish": "mostrar"
   },
   {
-    "english": "to get off",
-    "spanish": "bajarse"
-  },
-  {
     "english": "to stop",
     "spanish": "parar"
   },
   {
-    "english": "to turn off; to erase",
-    "spanish": "apagar; borrar"
+    "english": "to turn off",
+    "spanish": "apagar"
+  },
+  {
+    "english": "to erase",
+    "spanish": "borrar"
   },
   {
     "english": "to turn on",
@@ -192,32 +188,12 @@
     "spanish": "cortar"
   },
   {
-    "english": "to take (a photo)",
-    "spanish": "tomar (una foto)"
-  },
-  {
     "english": "to say",
     "spanish": "decir"
   },
   {
-    "english": "to be able to see",
-    "spanish": "poder ver"
-  },
-  {
     "english": "to use",
     "spanish": "usar"
-  },
-  {
-    "english": "to exist (inanimate)",
-    "spanish": "existir (inanimado)"
-  },
-  {
-    "english": "to exist (animate)",
-    "spanish": "existir (animado)"
-  },
-  {
-    "english": "to be troubled",
-    "spanish": "estar preocupado"
   },
   {
     "english": "to swim",

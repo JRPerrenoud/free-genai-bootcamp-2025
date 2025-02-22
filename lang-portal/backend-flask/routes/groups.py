@@ -27,8 +27,10 @@ def load(app):
 
       # Query to fetch groups with sorting and the cached word count
       cursor.execute(f'''
-        SELECT id, name, words_count
-        FROM groups
+        SELECT g.id, g.name, COUNT(wg.word_id) as words_count
+        FROM groups g
+        LEFT JOIN word_groups wg ON g.id = wg.group_id
+        GROUP BY g.id, g.name
         ORDER BY {sort_by} {order}
         LIMIT ? OFFSET ?
       ''', (groups_per_page, offset))
@@ -66,9 +68,11 @@ def load(app):
 
       # Get group details
       cursor.execute('''
-        SELECT id, name, words_count
-        FROM groups
-        WHERE id = ?
+        SELECT g.id, g.name, COUNT(wg.word_id) as words_count
+        FROM groups g
+        LEFT JOIN word_groups wg ON g.id = wg.group_id
+        WHERE g.id = ?
+        GROUP BY g.id, g.name
       ''', (id,))
       
       group = cursor.fetchone()
