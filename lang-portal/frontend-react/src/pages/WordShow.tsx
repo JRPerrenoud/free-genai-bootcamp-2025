@@ -59,19 +59,16 @@ export default function WordShow() {
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         <div className="p-6 space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Japanese</h2>
-            <p className="mt-1 text-3xl text-gray-600 dark:text-gray-300">{word.kanji}</p>
-          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Spanish</h2>
+              <p className="mt-1 text-3xl text-gray-600 dark:text-gray-300">{word.spanish}</p>
+            </div>
 
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Romaji</h2>
-            <p className="mt-1 text-xl text-gray-600 dark:text-gray-300">{word.romaji}</p>
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">English</h2>
-            <p className="mt-1 text-xl text-gray-600 dark:text-gray-300">{word.english}</p>
+            <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">English</h2>
+              <p className="mt-1 text-xl text-gray-600 dark:text-gray-300">{word.english}</p>
+            </div>
           </div>
 
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
