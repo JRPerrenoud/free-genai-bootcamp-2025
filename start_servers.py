@@ -9,6 +9,7 @@ import argparse
 
 FLASK_PORT = 5000
 TYPING_TUTOR_PORT = 8080
+REACT_PORT = 5173
 
 def is_port_in_use(port):
     """Check if a port is in use."""
@@ -42,6 +43,7 @@ def start_flask_server():
         stderr=subprocess.PIPE
     )
     print(f"Flask server started on port {FLASK_PORT}")
+    os.chdir('../..')
     return flask_process
 
 def start_typing_tutor():
@@ -51,60 +53,72 @@ def start_typing_tutor():
         kill_process_on_port(TYPING_TUTOR_PORT)
         time.sleep(1)
 
-    os.chdir('../../typing-tutor')
-    http_process = subprocess.Popen(
-        ['python3', '-m', 'http.server', str(TYPING_TUTOR_PORT)],
+    os.chdir('typing-tutor')
+    typing_tutor_process = subprocess.Popen(
+        ['npx', 'http-server', './public', '-p', str(TYPING_TUTOR_PORT)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
     print(f"Typing tutor server started on port {TYPING_TUTOR_PORT}")
-    return http_process
+    os.chdir('..')
+    return typing_tutor_process
+
+def start_react_server():
+    """Start the React frontend server."""
+    if is_port_in_use(REACT_PORT):
+        print(f"Port {REACT_PORT} is already in use. Stopping existing process...")
+        kill_process_on_port(REACT_PORT)
+        time.sleep(1)
+
+    os.chdir('lang-portal/frontend-react')
+    react_process = subprocess.Popen(
+        ['npm', 'run', 'dev'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    print(f"React server started on port {REACT_PORT}")
+    os.chdir('../..')
+    return react_process
 
 def init_database():
     """Initialize the database with fresh data."""
-    print("Initializing database...")
     os.chdir('lang-portal/backend-flask')
-    subprocess.run(['python3', 'init_db.py'])
+    subprocess.run(['python3', 'init_db.py'], check=True)
     os.chdir('../..')
-    print("Database initialized successfully")
 
 def main():
-    parser = argparse.ArgumentParser(description='Start servers for the language learning application')
-    parser.add_argument('--init-db', action='store_true', help='Initialize the database before starting servers')
-    args = parser.parse_args()
-
-    # Store the original working directory
-    original_dir = os.getcwd()
-
-    try:
-        if args.init_db:
-            init_database()
-
-        print("Starting servers...")
-        flask_process = start_flask_server()
-        typing_tutor_process = start_typing_tutor()
-
-        print("\nServers are running!")
-        print("Access the typing tutor at:")
-        print(f"  Adjectives: http://localhost:{TYPING_TUTOR_PORT}/public/index.html?group_id=1")
-        print(f"  Verbs: http://localhost:{TYPING_TUTOR_PORT}/public/index.html?group_id=2")
-        print("\nPress Ctrl+C to stop all servers")
-
-        # Wait for keyboard interrupt
-        flask_process.wait()
-        typing_tutor_process.wait()
-
-    except KeyboardInterrupt:
-        print("\nStopping servers...")
+    print("Starting servers...")
+    
+    # Initialize the database with fresh data
+    init_database()
+    
+    # Start all servers
+    flask_process = start_flask_server()
+    typing_tutor_process = start_typing_tutor()
+    react_process = start_react_server()
+    
+    print("\nServers are running!")
+    print("Access the typing tutor at:")
+    print("  Adjectives: http://localhost:8080/public/index.html?group_id=1")
+    print("  Verbs: http://localhost:8080/public/index.html?group_id=2")
+    print("\nAccess the language portal at:")
+    print("  http://localhost:5173")
+    
+    def signal_handler(signum, frame):
+        print("\nStopping all servers...")
         flask_process.terminate()
         typing_tutor_process.terminate()
+        react_process.terminate()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
         flask_process.wait()
         typing_tutor_process.wait()
-        print("Servers stopped")
-
-    finally:
-        # Restore original working directory
-        os.chdir(original_dir)
+        react_process.wait()
+    except KeyboardInterrupt:
+        signal_handler(None, None)
 
 if __name__ == '__main__':
     main()

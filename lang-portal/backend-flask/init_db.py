@@ -86,7 +86,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         study_session_id INTEGER NOT NULL,
         word_id INTEGER NOT NULL,
-        is_correct BOOLEAN NOT NULL,
+        correct BOOLEAN NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (study_session_id) REFERENCES study_sessions (id),
         FOREIGN KEY (word_id) REFERENCES words (id)
@@ -127,6 +127,37 @@ def init_db():
         for activity in activities:
             cursor.execute('INSERT INTO study_activities (name, url, preview_url) VALUES (?, ?, ?)',
                          (activity['name'], activity['url'], activity.get('preview_url')))
+
+    # Load and insert sample sessions
+    with open('seed/sample_sessions.json', 'r') as f:
+        sessions_data = json.load(f)
+        
+        for session in sessions_data['sessions']:
+            # Create session with specific timestamp
+            cursor.execute('''
+            INSERT INTO study_sessions (group_id, study_activity_id, created_at) 
+            VALUES (?, ?, ?)
+            ''', (session['group_id'], session['study_activity_id'], session['created_at']))
+            session_id = cursor.lastrowid
+            
+            # Add word reviews for this session
+            for review in session['word_reviews']:
+                # Add review item
+                cursor.execute('''
+                INSERT INTO word_review_items (study_session_id, word_id, correct, created_at)
+                VALUES (?, ?, ?, ?)
+                ''', (session_id, review['word_id'], review['correct'], session['created_at']))
+
+    # Update word_reviews table based on the review items
+    cursor.execute('''
+    INSERT OR REPLACE INTO word_reviews (word_id, correct_count, wrong_count)
+    SELECT 
+        word_id,
+        SUM(CASE WHEN correct THEN 1 ELSE 0 END) as correct_count,
+        SUM(CASE WHEN NOT correct THEN 1 ELSE 0 END) as wrong_count
+    FROM word_review_items
+    GROUP BY word_id
+    ''')
 
     conn.commit()
     conn.close()
