@@ -128,6 +128,28 @@ class SpanishWritingApp:
             logger.debug(f"Current word: {self.current_word}")
             logger.debug(f"Transcription: {transcription}, Target: {self.current_word.get('spanish', '')}, Is correct: {is_correct}")
             
+            # Submit grading result to backend
+            word_id = self.current_word.get('id')
+            review_data = {
+                'words': [
+                    {
+                        'word_id': word_id,
+                        'correct': is_correct
+                    }
+                ]
+            }
+
+            session_id = os.getenv('SESSION_ID', '1')  # Use a default session_id for testing
+
+            try:
+                response = requests.post(f"http://localhost:5000/api/study_sessions/{session_id}/review", json=review_data)
+                if response.status_code == 200:
+                    logger.info("Successfully submitted review to backend")
+                else:
+                    logger.error(f"Failed to submit review. Status code: {response.status_code}")
+            except Exception as e:
+                logger.error(f"Error submitting review: {str(e)}")
+            
             # Feedback
             feedback = "Well done!" if is_correct else "Please try again."
             logger.info(f"Grading complete: {result}")
@@ -137,6 +159,25 @@ class SpanishWritingApp:
         except Exception as e:
             logger.error(f"Error in grade_submission: {str(e)}")
             return "Error processing submission", "Error processing submission", f"An error occurred: {str(e)}"
+
+    def create_study_session(self, group_id, study_activity_id):
+        """Create a new study session with the given group_id and study_activity_id"""
+        try:
+            session_data = {
+                'group_id': group_id,
+                'study_activity_id': study_activity_id
+            }
+            response = requests.post("http://localhost:5000/api/study_sessions", json=session_data)
+            if response.status_code == 201:
+                session_id = response.json().get('id')
+                logger.info(f"New study session created with ID: {session_id}")
+                return session_id
+            else:
+                logger.error(f"Failed to create study session. Status code: {response.status_code}")
+                return None
+        except Exception as e:
+            logger.error(f"Error creating study session: {str(e)}")
+            return None
 
 def create_ui():
     app = SpanishWritingApp()
