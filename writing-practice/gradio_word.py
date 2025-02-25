@@ -3,10 +3,12 @@ import requests
 import json
 import random
 import logging
+import cv2
 from openai import OpenAI
 import os
 import dotenv
 import yaml
+import paddleocr
 
 dotenv.load_dotenv()
 
@@ -29,7 +31,7 @@ class SpanishWritingApp:
         self.client = OpenAI()
         self.vocabulary = None
         self.current_word = None
-        self.mocr = None
+        self.reader = None
         self.load_vocabulary()
 
     def load_vocabulary(self):
@@ -71,15 +73,53 @@ class SpanishWritingApp:
     def grade_submission(self, image):
         """Grade the user's submission"""
         try:
-            if not self.mocr:
-                logger.info("Initializing MangaOCR")
-                from manga_ocr import MangaOcr
-                self.mocr = MangaOcr()
+            if not self.reader:
+                logger.info("Initializing PaddleOCR")
+                self.reader = paddleocr.PaddleOCR(use_angle_cls=True, lang='es')
             
+            # Log the type and content of the image
+            logger.debug(f"Image type: {type(image)}")
+            logger.debug(f"Image content: {image}")
+
+            # Read the image from the file path
+            image_path = image
+            image = cv2.imread(image_path)
+
+            # Verify image reading
+            if image is None:
+                logger.error("Failed to read image")
+                return "Image read error", "Error", "Please check the image file."
+
+            # Log image dimensions and type
+            logger.debug(f"Image shape: {image.shape}")
+            logger.debug(f"Image dtype: {image.dtype}")
+
+            # Convert image to grayscale
+            image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            # Adjust contrast using histogram equalization
+            image_enhanced = cv2.equalizeHist(image_gray)
+
             # Transcribe the image
-            logger.info("Transcribing image with MangaOCR")
-            transcription = self.mocr(image)
+            logger.info("Transcribing enhanced image with PaddleOCR")
+            result = self.reader.ocr(image_enhanced, cls=True)
+            
+            # Print OCR results for debugging
+            logger.debug(f"OCR results: {result}")
+
+            # Extract recognized text from OCR results
+            if result and isinstance(result, list):
+                transcription = ' '.join([line[1][0] for block in result for line in block if len(line) > 1 and isinstance(line[1], tuple)])
+            else:
+                logger.error("Unexpected OCR result structure")
+                return "OCR result error", "Error", "Unexpected OCR result structure."
+
             logger.debug(f"Transcription result: {transcription}")
+            
+            # Check if current_word is initialized
+            if not self.current_word:
+                logger.error("Current word is not initialized")
+                return "No word selected", "Error", "Please select a word first."
             
             # Compare transcription with target word
             is_correct = transcription.strip().lower() == self.current_word.get('spanish', '').strip().lower()
