@@ -2,34 +2,35 @@
 
 ## Here's a complete list of all endpoints in the backend server:
 
-### Words Routes (/routes/words.py):
-GET /api/words - Get paginated list of words with optional group filtering and sorting
-GET /api/words/<id> - Get a single word with its details and groups
+### Words Endpoints
+GET /api/words - Get a paginated list of words (supports sorting and filtering by group)
+GET /api/words/<id> - Get details of a specific word by ID
 
-### Groups Routes (/routes/groups.py):
-GET /api/groups - Get paginated list of groups with sorting
-GET /api/groups/<id> - Get a single group's details
-GET /api/groups/<id>/words - Get paginated list of words in a group
-GET /api/groups/<id>/study_sessions - Get study sessions for a group
+### Groups Endpoints
+GET /api/groups - Get a paginated list of word groups
+GET /api/groups/<id> - Get details of a specific group by ID
+GET /api/groups/<id>/words - Get paginated list of words in a specific group
+GET /api/groups/<id>/words/raw - Get all words in a group without pagination
+POST /api/groups - Create a new group
+PUT /api/groups/<id> - Update an existing group
+DELETE /api/groups/<id> - Delete a group
 
-### Study Activities Routes (/routes/study_activities.py):
-GET /api/study_activities - Get list of all study activities
-GET /api/study_activities/<id> - Get details of a single study activity
-GET /api/study_activities/<id>/sessions - Get study sessions for an activity
-GET /api/study_activities/<id>/launch - Get launch data for an activity
+### Study Activities Endpoints
+GET /api/study_activities - Get all study activities
+GET /api/study_activities/<id> - Get details of a specific study activity
+GET /api/study_activities/<id>/sessions - Get paginated list of study sessions for a specific activity
+GET /api/study_activities/<id>/launch - Get launch data for a study activity (includes available groups)
 
-
-### Study Sessions Routes (/routes/study_sessions.py):
-GET /api/study_sessions - Get paginated list of all study sessions
-GET /api/study_sessions/<id> - Get details of a single study session with reviewed words
+### Study Sessions Endpoints
+GET /api/study_sessions - Get a paginated list of all study sessions
+POST /api/study_sessions - Create a new study session
+GET /api/study_sessions/<id> - Get details of a specific study session including reviewed words
+POST /api/study_sessions/<id>/review - Submit word reviews for a study session
 POST /api/study_sessions/reset - Reset all study session data
 
-
-There are also some TODO endpoints noted in the code:
-
-POST /study_sessions/:id/review (planned)
-GET /groups/:id/words/raw (planned)
-
+### Dashboard Endpoints
+GET /api/dashboard/recent_session - Get the most recent study session with results
+GET /api/dashboard/stats - Get overall study statistics (vocabulary count, mastered words, success rate, etc.)
 
 
 #### NOTES 
