@@ -24,7 +24,9 @@ def init_db():
     cursor.execute('''
     CREATE TABLE groups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
+        name TEXT NOT NULL,
+        description TEXT,
+        words_count INTEGER DEFAULT 0
     )
     ''')
 
@@ -95,10 +97,17 @@ def init_db():
     ''')
 
     # Create groups first
-    cursor.execute('INSERT INTO groups (name) VALUES (?)', ('Adjectives',))
+    cursor.execute('INSERT INTO groups (name, description, words_count) VALUES (?, ?, ?)', 
+                  ('Adjectives', 'Common Spanish adjectives', 0))
     adj_group_id = cursor.lastrowid
-    cursor.execute('INSERT INTO groups (name) VALUES (?)', ('Verbs',))
+    
+    cursor.execute('INSERT INTO groups (name, description, words_count) VALUES (?, ?, ?)', 
+                  ('Verbs', 'Common Spanish verbs', 0))
     verb_group_id = cursor.lastrowid
+    
+    cursor.execute('INSERT INTO groups (name, description, words_count) VALUES (?, ?, ?)', 
+                  ('All Words', 'Combined collection of all Spanish words', 0))
+    all_words_group_id = cursor.lastrowid
 
     # Load and insert adjectives
     with open('seed/data_adjectives.json', 'r') as f:
@@ -107,9 +116,12 @@ def init_db():
             cursor.execute('INSERT INTO words (english, spanish) VALUES (?, ?)',
                          (adj['english'], adj['spanish']))
             word_id = cursor.lastrowid
-            # Immediately associate with adjectives group
+            # Associate with adjectives group
             cursor.execute('INSERT INTO word_groups (word_id, group_id) VALUES (?, ?)',
                          (word_id, adj_group_id))
+            # Also associate with All Words group
+            cursor.execute('INSERT INTO word_groups (word_id, group_id) VALUES (?, ?)',
+                         (word_id, all_words_group_id))
     
     # Load and insert verbs
     with open('seed/data_verbs.json', 'r') as f:
@@ -118,9 +130,20 @@ def init_db():
             cursor.execute('INSERT INTO words (english, spanish) VALUES (?, ?)',
                          (verb['english'], verb['spanish']))
             word_id = cursor.lastrowid
-            # Immediately associate with verbs group
+            # Associate with verbs group
             cursor.execute('INSERT INTO word_groups (word_id, group_id) VALUES (?, ?)',
                          (word_id, verb_group_id))
+            # Also associate with All Words group
+            cursor.execute('INSERT INTO word_groups (word_id, group_id) VALUES (?, ?)',
+                         (word_id, all_words_group_id))
+
+    # Update word counts for each group
+    cursor.execute('UPDATE groups SET words_count = (SELECT COUNT(*) FROM word_groups WHERE group_id = ?) WHERE id = ?', 
+                  (adj_group_id, adj_group_id))
+    cursor.execute('UPDATE groups SET words_count = (SELECT COUNT(*) FROM word_groups WHERE group_id = ?) WHERE id = ?', 
+                  (verb_group_id, verb_group_id))
+    cursor.execute('UPDATE groups SET words_count = (SELECT COUNT(*) FROM word_groups WHERE group_id = ?) WHERE id = ?', 
+                  (all_words_group_id, all_words_group_id))
 
     # Load and insert study activities
     with open('seed/study_activities.json', 'r') as f:
@@ -129,17 +152,33 @@ def init_db():
             cursor.execute('INSERT INTO study_activities (name, url, preview_url) VALUES (?, ?, ?)',
                          (activity['name'], activity['url'], activity.get('preview_url')))
 
+    # Create a fixed session for Writing Practice with ID 1
+    cursor.execute('''
+    INSERT INTO study_sessions (id, group_id, study_activity_id)
+    VALUES (?, ?, (SELECT id FROM study_activities WHERE name = 'Writing Practice'))
+    ''', (1, all_words_group_id))
+    
     # Load and insert sample sessions
     with open('seed/sample_sessions.json', 'r') as f:
         sessions_data = json.load(f)
         
+        # Start ID counter at 2 since we already have ID 1
+        next_id = 2
+        
         for session in sessions_data['sessions']:
-            # Create session with specific timestamp
+            # Create session with specific timestamp and sequential ID
             cursor.execute('''
-            INSERT INTO study_sessions (group_id, study_activity_id, created_at) 
-            VALUES (?, ?, ?)
-            ''', (session['group_id'], session['study_activity_id'], session['created_at']))
-            session_id = cursor.lastrowid
+            INSERT INTO study_sessions (id, group_id, study_activity_id, created_at) 
+            VALUES (?, ?, ?, ?)
+            ''', (
+                next_id,  # Use our sequential counter
+                session['group_id'], 
+                session['study_activity_id'], 
+                session['created_at']
+            ))
+            
+            session_id = next_id  # Use our counter as the session_id
+            next_id += 1  # Increment for the next session
             
             # Add word reviews for this session
             for review in session['word_reviews']:
@@ -163,6 +202,12 @@ def init_db():
 
     conn.commit()
     conn.close()
+    
+    print("Database initialized successfully with:")
+    print(f"- Adjectives group: {len(adjectives)} words")
+    print(f"- Verbs group: {len(verbs)} words")
+    print(f"- All Words group: {len(adjectives) + len(verbs)} words")
+    print(f"- Fixed Writing Practice session created with ID 1 and group ID {all_words_group_id}")
 
 if __name__ == '__main__':
     init_db()

@@ -17,11 +17,17 @@ export default function StudyActivity({ activity }: ActivityProps) {
       <div className="p-4">
         <h3 className="text-xl font-semibold mb-2">{activity.title}</h3>
         <div className="flex justify-between">
-          <Button asChild>
-            <Link to={`/study_activities/${activity.id}/launch`}>
+          {activity.title === 'Writing Practice' ? (
+            <Button onClick={() => window.open(activity.launch_url, '_blank')}>
               Launch
-            </Link>
-          </Button>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link to={`/study_activities/${activity.id}/launch`}>
+                Launch
+              </Link>
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link to={`/study_activities/${activity.id}`}>
               View

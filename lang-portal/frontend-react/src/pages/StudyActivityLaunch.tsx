@@ -79,6 +79,10 @@ export default function StudyActivityLaunch() {
         setError('Failed to create study session')
         console.error(error)
       }
+    } else if (launchData?.activity.title === 'Writing Practice') {
+      // For Writing Practice, use fixed session ID (9999) and group ID (3)
+      // No need to create a new session or pass parameters in URL
+      window.open(launchData.activity.launch_url, '_blank')
     } else {
       // Handle other activities as before
       window.open(launchData?.activity.launch_url, '_blank')

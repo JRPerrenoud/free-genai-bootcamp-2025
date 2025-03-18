@@ -29,6 +29,32 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
+# Function to submit word review
+def submit_word_review(session_id, word_id, is_correct):
+    """Submit word review to the backend"""
+    if not session_id or not word_id:
+        logger.warning("Missing session_id or word_id for review submission")
+        return False
+        
+    try:
+        url = f"http://localhost:5000/api/study_sessions/{session_id}/review"
+        payload = {
+            "word_id": word_id,
+            "correct": is_correct
+        }
+        logger.debug(f"Submitting review: {payload} to {url}")
+        
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            logger.info(f"Successfully submitted review for word_id={word_id}, correct={is_correct}")
+            return True
+        else:
+            logger.error(f"Failed to submit review. Status code: {response.status_code}")
+            return False
+    except Exception as e:
+        logger.error(f"Error submitting review: {str(e)}")
+        return False
+
 class SpanishWritingApp:
     def __init__(self):
         self.client = OpenAI()
@@ -36,6 +62,9 @@ class SpanishWritingApp:
         self.current_word = None
         self.current_sentence = None
         self.current_translation = None
+        # Fixed session ID and group ID for Writing Practice
+        self.session_id = "1"  # Fixed session ID for Writing Practice
+        self.group_id = "3"       # Fixed group ID for All Words
         self.load_vocabulary()
         
         # Configure Tesseract for Spanish language
@@ -44,17 +73,16 @@ class SpanishWritingApp:
         self.tesseract_config = r'--oem 1 --psm 6 -l spa'
 
     def load_vocabulary(self):
-        """Fetch vocabulary from API using group_id"""
+        """Fetch vocabulary from API using fixed group_id"""
         try:
-            # Get group_id from environment variable or use default
-            group_id = os.getenv('GROUP_ID', '1')
-            url = f"http://localhost:5000/api/groups/{group_id}/words/raw"
-            logger.debug(f"Fetching vocabulary from: {url}")
+            # Always use group_id 3 (All Words)
+            url = f"http://localhost:5000/api/groups/{self.group_id}/words/raw"
+            logger.debug(f"Fetching vocabulary from fixed group ID: {self.group_id}")
             
             response = requests.get(url)
             if response.status_code == 200:
                 self.vocabulary = response.json()
-                logger.info(f"Loaded {len(self.vocabulary.get('words', []))} words")
+                logger.info(f"Loaded {len(self.vocabulary.get('words', []))} words from All Words group")
             else:
                 logger.error(f"Failed to load vocabulary. Status code: {response.status_code}")
                 self.vocabulary = {"words": []}
@@ -240,6 +268,13 @@ class SpanishWritingApp:
             
             logger.info(f"Grading complete: {grade}")
             logger.debug(f"Feedback: {feedback}")
+            
+            # Submit review to backend using fixed session_id
+            if self.current_word and 'id' in self.current_word:
+                is_correct = (grade == 'A')  # Consider A as correct, B and C as incorrect
+                word_id = self.current_word['id']
+                submit_word_review(self.session_id, word_id, is_correct)
+                logger.info(f"Submitted review for word_id={word_id}, correct={is_correct} to session {self.session_id}")
             
             return transcription, translation, grade, feedback
             
