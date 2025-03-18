@@ -124,11 +124,15 @@ class SpanishWritingApp:
         self.current_sentence = self.generate_sentence(self.current_word)
         self.current_translation = self.translate_sentence(self.current_sentence)
         
+        # Convert words to uppercase
+        english_word = self.current_word.get('english', '').upper()
+        spanish_word = self.current_word.get('spanish', '').upper()
+        
         return (
             self.current_sentence,
             self.current_translation,
-            self.current_word.get('english', ''),
-            self.current_word.get('spanish', ''),          
+            english_word,
+            spanish_word,          
         )
 
     def preprocess_image(self, image_path):
@@ -159,8 +163,8 @@ class SpanishWritingApp:
             logger.error(f"Error preprocessing image: {str(e)}")
             return image_path
 
-    def grade_submission(self, image):
-        """Process image submission and grade it using Tesseract OCR and LLM"""
+    def grade_word_submission(self, image):
+        """Process image submission and grade it for word practice"""
         try:
             # Preprocess the image to improve OCR accuracy
             logger.info("Preprocessing image for OCR")
@@ -195,17 +199,28 @@ class SpanishWritingApp:
             translation = translation_response.choices[0].message.content.strip()
             logger.debug(f"Translation: {translation}")
             
-            # Get grading and feedback
-            logger.info("Getting grade and feedback")
+            # Get grading and feedback for word
+            logger.info("Getting grade and feedback for word")
             grading_response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": prompts['grading']['system']},
-                    {"role": "user", "content": prompts['grading']['user'].format(
-                        target_sentence=self.current_sentence,
-                        submission=transcription,
-                        translation=translation
-                    )}
+                    {"role": "system", "content": "You are a Spanish language teacher evaluating a student's handwritten Spanish word. Provide a grade (A, B, or C) and helpful feedback."},
+                    {"role": "user", "content": f"""
+                    Please evaluate this handwritten Spanish word:
+                    
+                    Target Spanish word: {self.current_word.get('spanish', '')}
+                    Student's transcribed word: {transcription}
+                    Translation of student's word: {translation}
+                    
+                    Grade the submission as follows:
+                    - Grade A: Perfect or near-perfect match with the target word
+                    - Grade B: Good attempt with minor errors in spelling or accents
+                    - Grade C: Significant errors or completely different word
+                    
+                    Format your response as:
+                    Grade: [A/B/C]
+                    Feedback: [Your detailed feedback]
+                    """}
                 ],
                 temperature=0.3
             )
@@ -229,7 +244,7 @@ class SpanishWritingApp:
             return transcription, translation, grade, feedback
             
         except Exception as e:
-            logger.error(f"Error in grade_submission: {str(e)}")
+            logger.error(f"Error in grade_word_submission: {str(e)}")
             return "Error processing submission", "Error processing submission", "C", f"An error occurred: {str(e)}"
 
 def create_ui():
@@ -274,7 +289,7 @@ def create_ui():
     """
     
     with gr.Blocks(
-        title="Spanish Writing Practice",
+        title="Spanish Word Practice",
         css=custom_css,
         head="""
         <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlNwYW5pc2ggV3JpdGluZyBQcmFjdGljZSIsCiAgInNob3J0X25hbWUiOiAiU3BhbmlzaEFwcCIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzRhOTBlMiIsCiAgImljb25zIjogW10KfQ==">
@@ -289,76 +304,87 @@ def create_ui():
         </style>
         """
     ) as interface:
-        gr.Markdown("# Spanish Writing Practice")
+        gr.Markdown("# Spanish Word Practice")
         
-        # Store the current translation and word
-        current_translation = gr.State("")
-        current_english_word = gr.State("")
+        # Store the current sentence and word
+        current_spanish_sentence = gr.State("")
+        current_spanish_word = gr.State("")
         
         with gr.Row():
             with gr.Column():
-                generate_btn = gr.Button("Generate New Sentence", variant="primary")
+                generate_btn = gr.Button("Generate New Word", variant="primary")
                 
-                # Spanish sentence output
-                gr.Markdown("### Sentence to Practice")
-                spanish_sentence_output = gr.Textbox(
-                    label="Spanish",
-                    lines=3,
+                # Word information section
+                gr.Markdown("### Word to Practice")
+                
+                # English word output
+                english_word_output = gr.Textbox(
+                    label="English",
+                    interactive=False,
                     scale=2,
-                    show_label=True,
                     container=True,
-                    elem_classes=["spanish-text-output"]
+                    elem_classes=["english-text-output"]
                 )
                 
-                # English translation section with hint button
+                # Spanish word section with show button
                 with gr.Row():
-                    gr.Markdown("### English")
-                    show_english_btn = gr.Button("Show", size="sm", elem_classes=["hint-button"])
+                    gr.Markdown("### Spanish")
+                    show_spanish_word_btn = gr.Button("Show", size="sm", elem_classes=["hint-button"])
                 
-                # Initially hidden English translation
-                english_translation_output = gr.Textbox(
+                # Initially hidden Spanish word
+                spanish_word_output = gr.Textbox(
                     label="",
-                    lines=3,
+                    interactive=False,
                     scale=2,
-                    show_label=False,
                     container=True,
-                    elem_classes=["english-text-output"],
+                    elem_classes=["spanish-text-output"],
                     visible=False
                 )
                 
-                # Word information section
-                gr.Markdown("### Word Information")
+                # Example sentence section (optional)
+                gr.Markdown("### Example Sentence")
                 
-                # Spanish word output
-                spanish_word_output = gr.Textbox(label="Spanish", interactive=False)
+                # English sentence
+                english_translation_output = gr.Textbox(
+                    label="English",
+                    lines=2,
+                    scale=2,
+                    show_label=True,
+                    container=True,
+                    elem_classes=["english-text-output"]
+                )
                 
-                # English word section with hint button
+                # Spanish sentence section with show button
                 with gr.Row():
-                    gr.Markdown("#### English")
-                    show_english_word_btn = gr.Button("Show", size="sm", elem_classes=["hint-button"])
+                    gr.Markdown("### Spanish Example")
+                    show_spanish_btn = gr.Button("Show", size="sm", elem_classes=["hint-button"])
                 
-                # Initially hidden English word
-                english_word_output = gr.Textbox(
+                # Initially hidden Spanish sentence
+                spanish_sentence_output = gr.Textbox(
                     label="",
-                    interactive=False,
+                    lines=2,
+                    scale=2,
+                    show_label=False,
+                    container=True,
+                    elem_classes=["spanish-text-output"],
                     visible=False
                 )
             
             with gr.Column():
-                image_input = gr.Image(label="Upload your handwritten sentence", type="filepath")
+                image_input = gr.Image(label="Upload your handwritten word", type="filepath")
                 submit_btn = gr.Button("Submit", variant="secondary")
                 
                 with gr.Group():
                     gr.Markdown("### Feedback")
                     transcription_output = gr.Textbox(
                         label="Transcription",
-                        lines=3,
+                        lines=1,
                         scale=2,
                         show_label=True,
                         container=True,
                         elem_classes=["transcription-output"]
                     )
-                    translation_output = gr.Textbox(label="Translation", lines=2)
+                    translation_output = gr.Textbox(label="Translation", lines=1)
                     grade_output = gr.Textbox(label="Grade")
                     feedback_output = gr.Textbox(label="Feedback", lines=3)
 
@@ -367,48 +393,48 @@ def create_ui():
             logger.debug("Generate button clicked")
             spanish, english_trans, english_word, spanish_word = app.get_random_word_and_sentence()
             logger.debug("Finished processing generate button click")
-            # Hide the English text when generating a new sentence
-            return [spanish, spanish_word, gr.update(visible=False), gr.update(visible=False), english_trans, english_word]
+            # Hide the Spanish text when generating a new word
+            return [english_word, english_trans, gr.update(visible=False), gr.update(visible=False), spanish, spanish_word]
 
         generate_btn.click(
             fn=handle_generate_click,
             outputs=[
-                spanish_sentence_output, 
-                spanish_word_output,
-                english_translation_output,
                 english_word_output,
-                current_translation,
-                current_english_word
+                english_translation_output, 
+                spanish_word_output,
+                spanish_sentence_output,
+                current_spanish_sentence,
+                current_spanish_word
             ]
         )
         
-        def handle_submission(image):
-            return app.grade_submission(image)
+        def handle_word_submission(image):
+            return app.grade_word_submission(image)
             
         submit_btn.click(
-            fn=handle_submission,
+            fn=handle_word_submission,
             inputs=[image_input],
             outputs=[transcription_output, translation_output, grade_output, feedback_output]
         )
         
-        # Show/hide English translation
-        def show_english_translation(translation):
-            return gr.update(value=translation, visible=True)
+        # Show/hide Spanish sentence
+        def show_spanish_sentence(sentence):
+            return gr.update(value=sentence, visible=True)
         
-        show_english_btn.click(
-            fn=show_english_translation,
-            inputs=[current_translation],
-            outputs=[english_translation_output]
+        show_spanish_btn.click(
+            fn=show_spanish_sentence,
+            inputs=[current_spanish_sentence],
+            outputs=[spanish_sentence_output]
         )
         
-        # Show/hide English word
-        def show_english_word(word):
+        # Show/hide Spanish word
+        def show_spanish_word(word):
             return gr.update(value=word, visible=True)
         
-        show_english_word_btn.click(
-            fn=show_english_word,
-            inputs=[current_english_word],
-            outputs=[english_word_output]
+        show_spanish_word_btn.click(
+            fn=show_spanish_word,
+            inputs=[current_spanish_word],
+            outputs=[spanish_word_output]
         )
 
     return interface
