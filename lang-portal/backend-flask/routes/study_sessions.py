@@ -256,7 +256,7 @@ def load(app):
               raise ValueError("Invalid word review data")
 
             # Process the word review
-            process_word_review(cursor, word_id, correct)
+            process_word_review(cursor, id, word_id, correct)
         
         # Handle individual word review (from typing tutor)
         elif 'word_id' in data and 'correct' in data:
@@ -264,7 +264,7 @@ def load(app):
           correct = data['correct']
           
           # Process the individual word review
-          process_word_review(cursor, word_id, correct)
+          process_word_review(cursor, id, word_id, correct)
         
         else:
           return jsonify({"error": "Invalid review data format"}), 400
@@ -280,7 +280,7 @@ def load(app):
       return jsonify({"error": str(e)}), 500
 
   # Helper function to process a word review
-  def process_word_review(cursor, word_id, correct):
+  def process_word_review(cursor, session_id, word_id, correct):
     # Check if word review exists
     cursor.execute('SELECT word_id FROM word_reviews WHERE word_id = ?', (word_id,))
     review_exists = cursor.fetchone()
@@ -310,6 +310,17 @@ def load(app):
         0 if correct else 1,
         datetime.now()
       ))
+    
+    # Insert record into word_review_items table to track this review for the session
+    cursor.execute('''
+      INSERT INTO word_review_items (study_session_id, word_id, correct, created_at)
+      VALUES (?, ?, ?, ?)
+    ''', (
+      session_id,
+      word_id,
+      correct,
+      datetime.now()
+    ))
 
   @app.route('/api/study_sessions/reset', methods=['POST'])
   @cross_origin()
