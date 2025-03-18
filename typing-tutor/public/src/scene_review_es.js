@@ -51,11 +51,23 @@ class SceneReviewEs extends Phaser.Scene {
 	}
 
 	reviewed(){
+		// Add boundary check to prevent accessing beyond array length
+		if (this.marker_pos >= this.failed_words.length) {
+			// All words reviewed, could show a message or return to main game
+			this.userText.setText("All words reviewed! Press 'q' to continue");
+			return;
+		}
+		
 		if (this.failed_words[this.marker_pos].valid(this.userInput)) {
 			this.failed_words[this.marker_pos].reviewed = true
 			this.marker_pos += 1
 			this.userInput = ''
 			this.userText.setText(this.userInput);
+			
+			// Add another check after incrementing marker_pos
+			if (this.marker_pos >= this.failed_words.length) {
+				this.userText.setText("All words reviewed! Press 'q' to continue");
+			}
 		}
 	}
 

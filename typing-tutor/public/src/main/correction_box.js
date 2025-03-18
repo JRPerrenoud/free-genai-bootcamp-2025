@@ -18,10 +18,10 @@ class CorrectionBox {
 		this.userText.visible = false
 	}
 
-	set(word){
+	set(word, d_index){
 		this.userInput = '';
 		this.userText.setText(this.userInput)
-		this.word.set(word)
+		this.word.set(word, d_index)
 		this.userText.visible = true
 	}
 

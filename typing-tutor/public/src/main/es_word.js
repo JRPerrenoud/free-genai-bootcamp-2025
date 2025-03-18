@@ -75,7 +75,7 @@ class EsWord {
 		this.x = this.pos * 32
 		
 		// Fixed speed for all words
-		this.speed = 0.4
+		this.speed = 1.9
 
 		this.y = -this.size_spanish
 		this.falling = true

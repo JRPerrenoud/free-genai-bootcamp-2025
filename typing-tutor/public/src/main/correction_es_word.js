@@ -4,7 +4,7 @@ class CorrectionEsWord {
 		this.size_en = 16
 		this.size_spanish = 48
 		this.size_sp = 12
-
+		
 		const style_english = {
 			font: `${this.size_en}px Arial`, 
 			fill: '#ffffff'
@@ -46,14 +46,16 @@ class CorrectionEsWord {
     this.txt_english.setText(this.english)
 		this.txt_english.y = box_y + box_h - 64
 
-		word.parts.forEach((part, index) => {
-			this.blocks[index].set(
+		// Process each character of the Spanish word individually
+		// instead of trying to access word.parts which doesn't exist
+		for (let i = 0; i < this.spanish_text.length; i++) {
+			this.blocks[i].set(
 				this.x,
 				this.y,
-				part.spanish,
-				part.spanish.toLowerCase().split(''),
+				this.spanish_text.charAt(i),
+				this.spanish_text.charAt(i).toLowerCase().split(''),
 			)
-		});
+		}
 	}
 
 	check_input(user_input){

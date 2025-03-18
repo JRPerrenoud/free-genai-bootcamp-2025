@@ -46,14 +46,16 @@ class ReviewEsWord {
 		this.txt_english.x = this.x + 8
 		this.txt_english.y = this.y + 80 - 24
 
-		word.parts.forEach((part, index) => {
-			this.blocks[index].set(
+		// Process each character of the Spanish word individually
+		// instead of trying to access word.parts which doesn't exist
+		for (let i = 0; i < this.spanish_text.length; i++) {
+			this.blocks[i].set(
 				this.x,
 				this.y,
-				part.spanish,
-				part.spanish.toLowerCase().split(''),
+				this.spanish_text.charAt(i),
+				this.spanish_text.charAt(i).toLowerCase().split(''),
 			)
-		});
+		}
 	}
 
 	highlight(user_input) {
