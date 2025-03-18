@@ -1,6 +1,6 @@
-class SceneMain extends Phaser.Scene {
+class SceneMainEs extends Phaser.Scene {
 	constructor() {
-		super('SceneMain');
+		super('SceneMainEs');
 	}	
 
 	preload() {
@@ -10,13 +10,12 @@ class SceneMain extends Phaser.Scene {
 		this.sound_files = []
     Data.words.forEach(data => {
 			const en = data.english.replace(/ /g,'_')
-			const jp = data.romaji
+			const es = data.spanish.replace(/ /g,'_')
 			this.sound_files.push(en)
-			this.sound_files.push(jp)
+			this.sound_files.push(es)
 			this.load.audio(en, `audio/en/${en}.mp3`);
-			this.load.audio(jp, `audio/jp/${jp}.mp3`);
+			this.load.audio(es, `audio/es/${es}.mp3`);
     });
-
 	}
 
 	create() {
@@ -53,16 +52,17 @@ class SceneMain extends Phaser.Scene {
 			fill: '#434343'
 		}).setOrigin(0.5);
 
-		this.word_manager = new WordManager(this);
+		// Use the Spanish version of WordManager
+		this.word_manager = new WordManagerEs(this)
 
 		this.userInput = '';
 		this.missle = new Missle(this);
-		this.show_romaji = false;
+		
+		this.show_spanish = false
 
-		this.word_manager.spawn();
+		this.word_manager.spawn()
 
-
-		this.correction_box = new CorrectionBox(this);
+		this.correction_box = new CorrectionBox(this)
 
 		// Enable keyboard input
 		this.input.keyboard.on('keydown', (event) => {
@@ -79,17 +79,24 @@ class SceneMain extends Phaser.Scene {
 			// Ignore the 'Dead' key event
 			return;
 		} else if (ev.key === 'Shift') {
-			this.userInput = '';
+			this.userInput = ''
 		} else if (ev.key === 'q') {
-			this.scene.start('SceneReview');
+			// Start the Spanish review scene instead of the Japanese one
+			this.scene.start('SceneReviewEs')
 		} else if (ev.keyCode === 8 && this.userInput.length > 0) {
 			// Handle backspace
 			this.userInput = this.userInput.slice(0, -1);
 		} else if (ev.key === 'Enter') {
 			this.fire()
 			return;
-		} else if ((ev.keyCode >= 65 && ev.keyCode <= 90) || ev.keyCode === 32) {
-			// Add character for letters and space
+		} else if (
+			// Allow a wider range of characters including letters, space, and accented characters
+			(ev.keyCode >= 65 && ev.keyCode <= 90) || // A-Z
+			ev.keyCode === 32 || // Space
+			(ev.keyCode >= 97 && ev.keyCode <= 122) || // a-z
+			ev.key.match(/[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]/) // Spanish accented characters
+		) {
+			// Add character for letters, space, and Spanish accented characters
 			this.userInput += ev.key.toLowerCase();
 		}
 		this.userText.setText(this.userInput);
@@ -110,11 +117,12 @@ class SceneMain extends Phaser.Scene {
 			delay: delay,
 			callback: this.word_manager.spawn,
 			callbackScope: this.word_manager
-		});
+		})
 	}
 
-	showRomaji(){
-		return this.show_romaji;
+	// Changed from showRomaji to showSpanish
+	showSpanish(){
+		return this.show_spanish
 	}
 
 	fire(){
@@ -137,11 +145,10 @@ class SceneMain extends Phaser.Scene {
     }
 	} // fire
 
-
-
-	hit(kanji_len,pos){
-		for (let i = 0; i < kanji_len; i++) {
-			this.skyline[pos+i].remove();
+	// Changed from kanji_len to spanish_len to reflect Spanish word length
+	hit(spanish_len, pos){
+		for (let i = 0; i < spanish_len; i++) {
+			this.skyline[pos+i].remove()
 		}
 	}
 }

@@ -8,7 +8,7 @@ class CorrectionBox {
 		this.height = 180
 		this.userInput = '';
 
-		this.word = new CorrectionJpWord(scene)
+		this.word = new CorrectionEsWord(scene)
 
 		const y_text = this.y + this.height - 22
 		this.userText = this.scene.add.text(this.scene.game.config.width / 2, y_text, '', {
@@ -65,8 +65,14 @@ class CorrectionBox {
 		} else if (ev.key === 'Enter') {
 			this.correct()
 			return;
-		} else if ((ev.keyCode >= 65 && ev.keyCode <= 90) || ev.keyCode === 32) {
-			// Add character for letters and space
+		} else if (
+			// Allow a wider range of characters including letters, space, and accented characters
+			(ev.keyCode >= 65 && ev.keyCode <= 90) || // A-Z
+			ev.keyCode === 32 || // Space
+			(ev.keyCode >= 97 && ev.keyCode <= 122) || // a-z
+			ev.key.match(/[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]/) // Spanish accented characters
+		) {
+			// Add character for letters, space, and Spanish accented characters
 			this.userInput += ev.key.toLowerCase();
 		}
 		this.userText.setText(this.userInput);
@@ -78,7 +84,7 @@ class CorrectionBox {
 	}
 
 	correct(){
-		if (this.word.valid(this.userInput)){
+		if (this.word.check_input(this.userInput)){
 			this.scene.sound.play(this.word.english.replace(/ /g,'_'))
 			this.scene.timer.paused = false
 			this.scene.mode = 'falling'

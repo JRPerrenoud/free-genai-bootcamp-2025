@@ -78,9 +78,11 @@ class EsWordBlock {
 			return user_input
 		}
 		
-		const char = this.spanish.text.toLowerCase()
+		// Use normalizeSpanish for accent-insensitive character comparison
+		const normalizedChar = normalizeSpanish(this.spanish.text);
+		const normalizedInput = user_input.length > 0 ? normalizeSpanish(user_input[0]) : '';
 		
-		if (user_input.length > 0 && char === user_input[0].toLowerCase()) {
+		if (user_input.length > 0 && normalizedChar === normalizedInput) {
 			// Full match for this character
 			this.match_per = 1
 			this.maskShape.clear()

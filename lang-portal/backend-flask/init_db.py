@@ -43,6 +43,7 @@ def init_db():
         word_id INTEGER PRIMARY KEY,
         correct_count INTEGER DEFAULT 0,
         wrong_count INTEGER DEFAULT 0,
+        last_reviewed TIMESTAMP,
         FOREIGN KEY (word_id) REFERENCES words (id)
     )
     ''')
@@ -150,11 +151,12 @@ def init_db():
 
     # Update word_reviews table based on the review items
     cursor.execute('''
-    INSERT OR REPLACE INTO word_reviews (word_id, correct_count, wrong_count)
+    INSERT OR REPLACE INTO word_reviews (word_id, correct_count, wrong_count, last_reviewed)
     SELECT 
         word_id,
         SUM(CASE WHEN correct THEN 1 ELSE 0 END) as correct_count,
-        SUM(CASE WHEN NOT correct THEN 1 ELSE 0 END) as wrong_count
+        SUM(CASE WHEN NOT correct THEN 1 ELSE 0 END) as wrong_count,
+        MAX(created_at) as last_reviewed
     FROM word_review_items
     GROUP BY word_id
     ''')

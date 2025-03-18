@@ -147,17 +147,13 @@ class EsWord {
 			return
 		}
 		
-		// Normalize input and word for accent-insensitive comparison
-		const normalizedInput = user_input.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-		const normalizedSpanish = this.spanish.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-		
 		// First try exact match including accents
 		if (this.spanish.toLowerCase() === user_input.toLowerCase()) {
 			return true;
 		}
 		
-		// Then try accent-insensitive match
-		return normalizedSpanish === normalizedInput;
+		// Then try accent-insensitive match using our utility function
+		return normalizeSpanish(this.spanish) === normalizeSpanish(user_input);
 	}
 	
 	remove() {

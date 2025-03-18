@@ -29,8 +29,10 @@
 <body>
     <div id="game-container"></div>
 
+		<script src="src/utils.js"></script>
 		<script src="src/player_data.js"></script>
 		<script src="src/main/info_bar.js"></script>
+		<script src="src/main/correction_es_word_block.js"></script> 
 		<!-- <script src="src/main/word_manager.js"></script> -->
 		<script src="src/main/word_manager_es.js"></script>
 		<script src="src/main/skyline_block.js"></script>
@@ -39,13 +41,19 @@
 		<script src="src/main/es_word.js"></script>
 		<!-- <script src="src/main/jp_word_block.js"></script> -->
 		<script src="src/main/es_word_block.js"></script>
-		<script src="src/main/correction_jp_word.js"></script>
-		<script src="src/main/correction_jp_word_block.js"></script>
+		<!-- <script src="src/main/correction_jp_word.js"></script> -->
+		<script src="src/main/correction_es_word.js"></script>
+		<!-- <script src="src/main/correction_jp_word_block.js"></script> -->
+		<script src="src/main/correction_box.js"></script>		
 		<script src="src/review/review_border.js"></script>
-		<script src="src/review/review_jp_word.js"></script>
-		<script src="src/review/review_jp_word_block.js"></script>
-		<script src="src/scene_main.js"></script>
-		<script src="src/scene_review.js"></script>
+		<!-- <script src="src/review/review_jp_word.js"></script> -->
+		<script src="src/review/review_es_word.js"></script>
+		<!-- <script src="src/review/review_jp_word_block.js"></script> -->
+		<script src="src/review/review_es_word_block.js"></script>
+		<!-- <script src="src/scene_main.js"></script> -->
+		<script src="src/scene_main_es.js"></script>
+		<!-- <script src="src/scene_review.js"></script> -->
+		<script src="src/scene_review_es.js"></script>
     <script>
 let Data;
 async function fetchWords(group_id) {
@@ -66,7 +74,7 @@ async function initGame() {
 		width: 1280,
 		height: 720,
 		parent: 'game-container',
-		scene: [SceneMain]
+		scene: [SceneMainEs]
 	};
 	const game = new Phaser.Game(config);
 }

@@ -226,9 +226,12 @@ def load(app):
   @cross_origin()
   def submit_session_review(id):
     try:
+      if not request.is_json:
+        return jsonify({"error": "Missing JSON in request"}), 400
+
       data = request.get_json()
-      if not data or 'words' not in data:
-        return jsonify({"error": "No word review data provided"}), 400
+      if not data:
+        return jsonify({"error": "No review data provided"}), 400
 
       cursor = app.db.cursor()
 
@@ -242,46 +245,29 @@ def load(app):
       cursor.execute('BEGIN TRANSACTION')
 
       try:
-        # Process each word review
-        for word_review in data['words']:
-          word_id = word_review.get('word_id')
-          correct = word_review.get('correct')
+        # Check if it's a batch review (array of words) or individual review
+        if 'words' in data:
+          # Process each word review in batch
+          for word_review in data['words']:
+            word_id = word_review.get('word_id')
+            correct = word_review.get('correct')
 
-          if word_id is None or correct is None:
-            raise ValueError("Invalid word review data")
+            if word_id is None or correct is None:
+              raise ValueError("Invalid word review data")
 
-          # Check if word review exists
-          cursor.execute('SELECT word_id FROM word_reviews WHERE word_id = ?', (word_id,))
-          review_exists = cursor.fetchone()
-
-          if review_exists:
-            # Update existing review
-            cursor.execute('''
-              UPDATE word_reviews 
-              SET correct_count = correct_count + ?,
-                  wrong_count = wrong_count + ?
-              WHERE word_id = ?
-            ''', (
-              1 if correct else 0,
-              0 if correct else 1,
-              word_id
-            ))
-          else:
-            # Insert new review
-            cursor.execute('''
-              INSERT INTO word_reviews (word_id, correct_count, wrong_count)
-              VALUES (?, ?, ?)
-            ''', (
-              word_id,
-              1 if correct else 0,
-              0 if correct else 1
-            ))
-
-          # Add review item to session
-          cursor.execute('''
-            INSERT INTO word_review_items (study_session_id, word_id, correct)
-            VALUES (?, ?, ?)
-          ''', (id, word_id, correct))
+            # Process the word review
+            process_word_review(cursor, word_id, correct)
+        
+        # Handle individual word review (from typing tutor)
+        elif 'word_id' in data and 'correct' in data:
+          word_id = data['word_id']
+          correct = data['correct']
+          
+          # Process the individual word review
+          process_word_review(cursor, word_id, correct)
+        
+        else:
+          return jsonify({"error": "Invalid review data format"}), 400
 
         app.db.commit()
         return jsonify({"message": "Review submitted successfully"}), 200
@@ -292,6 +278,38 @@ def load(app):
 
     except Exception as e:
       return jsonify({"error": str(e)}), 500
+
+  # Helper function to process a word review
+  def process_word_review(cursor, word_id, correct):
+    # Check if word review exists
+    cursor.execute('SELECT word_id FROM word_reviews WHERE word_id = ?', (word_id,))
+    review_exists = cursor.fetchone()
+
+    if review_exists:
+      # Update existing review
+      cursor.execute('''
+        UPDATE word_reviews 
+        SET correct_count = correct_count + ?,
+            wrong_count = wrong_count + ?,
+            last_reviewed = ?
+        WHERE word_id = ?
+      ''', (
+        1 if correct else 0,
+        0 if correct else 1,
+        datetime.now(),
+        word_id
+      ))
+    else:
+      # Insert new review
+      cursor.execute('''
+        INSERT INTO word_reviews (word_id, correct_count, wrong_count, last_reviewed)
+        VALUES (?, ?, ?, ?)
+      ''', (
+        word_id,
+        1 if correct else 0,
+        0 if correct else 1,
+        datetime.now()
+      ))
 
   @app.route('/api/study_sessions/reset', methods=['POST'])
   @cross_origin()
