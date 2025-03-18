@@ -159,7 +159,15 @@ export const fetchWordDetails = async (wordId: number): Promise<Word> => {
 export const createStudySession = async (
   groupId: number,
   studyActivityId: number
-): Promise<{ session_id: number }> => {
+): Promise<{
+  id: number;
+  group_id: number;
+  group_name: string;
+  activity_id: number;
+  activity_name: string;
+  start_time: string;
+  review_items_count: number;
+}> => {
   const response = await fetch(`${API_BASE_URL}/api/study_sessions`, {
     method: 'POST',
     headers: {

@@ -54,17 +54,31 @@ export default function StudyActivityLaunch() {
       })
   }, [id, setCurrentStudyActivity])
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
     if (!selectedGroup) {
       setError('Please select a word group')
       return
     }
 
-    // For typing tutor, we'll open it in a new window with the group ID
+    // For typing tutor, we'll create a study session and open it in a new window with the group ID and session ID
     if (launchData?.activity.title === 'Typing Tutor') {
-      const typingTutorUrl = new URL(launchData.activity.launch_url)
-      typingTutorUrl.searchParams.set('group_id', selectedGroup)
-      window.open(typingTutorUrl.toString(), '_blank')
+      try {
+        // Create a study session and get the session ID
+        const groupId = parseInt(selectedGroup)
+        const activityId = launchData.activity.id
+        const sessionResponse = await createStudySession(groupId, activityId)
+        
+        // Add both group_id and session_id to the URL
+        const typingTutorUrl = new URL(launchData.activity.launch_url)
+        typingTutorUrl.searchParams.set('group_id', selectedGroup)
+        typingTutorUrl.searchParams.set('session_id', sessionResponse.id.toString())
+        
+        // Open the typing tutor in a new window
+        window.open(typingTutorUrl.toString(), '_blank')
+      } catch (error) {
+        setError('Failed to create study session')
+        console.error(error)
+      }
     } else {
       // Handle other activities as before
       window.open(launchData?.activity.launch_url, '_blank')
