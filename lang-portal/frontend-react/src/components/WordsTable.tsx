@@ -1,5 +1,3 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Word } from '../services/api'
 
@@ -22,7 +20,7 @@ export default function WordsTable({ words, sortKey, sortDirection, onSort }: Wo
               <th
                 key={key}
                 scope="col"
-                className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 sm:pl-6"
                 onClick={() => onSort(key)}
                 style={{ cursor: 'pointer' }}
               >
@@ -44,10 +42,10 @@ export default function WordsTable({ words, sortKey, sortDirection, onSort }: Wo
         <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
           {words.map((word) => (
             <tr key={word.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100 sm:pl-6">
                 {word.spanish}
               </td>
-              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
                 {word.english}
               </td>
               <td className="px-3 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">

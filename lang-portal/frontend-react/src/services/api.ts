@@ -104,10 +104,7 @@ export interface GroupWordsResponse {
 }
 
 export const fetchGroupDetails = async (
-  groupId: number,
-  page: number = 1,
-  sortBy: string = 'spanish',
-  order: 'asc' | 'desc' = 'asc'
+  groupId: number
 ): Promise<GroupDetails> => {
   const response = await fetch(`${API_BASE_URL}/api/groups/${groupId}`);
   if (!response.ok) {
