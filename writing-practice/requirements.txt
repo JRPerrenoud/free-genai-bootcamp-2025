@@ -3,14 +3,16 @@ openai>=1.0.0
 requests>=2.31.0
 python-dotenv
 PyYAML>=6.0.1
-manga-ocr>=0.1.8
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.6.0+cpu
-torchvision==0.21.0+cpu
-shapely
-scikit-image
-pyclipper
-lmdb
+# Removing manga-ocr
+# manga-ocr>=0.1.8
+# --extra-index-url https://download.pytorch.org/whl/cpu
+# torch==2.6.0+cpu
+# torchvision==0.21.0+cpu
+# shapely
+# scikit-image
+# pyclipper
+# lmdb
+pytesseract>=0.3.10
 tqdm
 numpy
 rapidfuzz
@@ -19,7 +21,6 @@ opencv-contrib-python
 cython
 Pillow
 pyyaml
-requests
 albumentations==1.4.10
 albucore==0.0.13
 packaging

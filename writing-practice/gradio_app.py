@@ -7,6 +7,11 @@ from openai import OpenAI
 import os
 import dotenv
 import yaml
+import shutil
+import pytesseract
+import cv2
+from PIL import Image
+import numpy as np
 
 dotenv.load_dotenv()
 
@@ -30,8 +35,13 @@ class SpanishWritingApp:
         self.vocabulary = None
         self.current_word = None
         self.current_sentence = None
-        self.mocr = None
+        self.current_translation = None
         self.load_vocabulary()
+        
+        # Configure Tesseract for Spanish language
+        # Note: This requires the Spanish language data files to be installed
+        # on the system where the app is running
+        self.tesseract_config = r'--oem 1 --psm 6 -l spa'
 
     def load_vocabulary(self):
         """Fetch vocabulary from API using group_id"""
@@ -76,6 +86,30 @@ class SpanishWritingApp:
         except Exception as e:
             logger.error(f"Error generating sentence: {str(e)}")
             return "Error generating sentence. Please try again."
+            
+    def translate_sentence(self, sentence):
+        """Translate a Spanish sentence to English"""
+        logger.debug(f"Translating sentence: {sentence}")
+        
+        try:
+            prompts = load_prompts()
+            messages = [
+                {"role": "system", "content": prompts['translation']['system']},
+                {"role": "user", "content": prompts['translation']['user'].format(text=sentence)}
+            ]
+            
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                temperature=0.3,
+                max_tokens=100
+            )
+            translation = response.choices[0].message.content.strip()
+            logger.info(f"Generated translation: {translation}")
+            return translation
+        except Exception as e:
+            logger.error(f"Error translating sentence: {str(e)}")
+            return "Error translating sentence. Please try again."
 
     def get_random_word_and_sentence(self):
         """Get a random word and generate a sentence"""
@@ -83,31 +117,67 @@ class SpanishWritingApp:
         
         if not self.vocabulary or not self.vocabulary.get('words'):
             logger.error("No vocabulary loaded")
-            return "No vocabulary loaded", "", "", "Please make sure vocabulary is loaded properly."
+            return "No vocabulary loaded", "No translation available", "", ""
             
         self.current_word = random.choice(self.vocabulary['words'])
         logger.debug(f"Selected word: {self.current_word}")
         self.current_sentence = self.generate_sentence(self.current_word)
+        self.current_translation = self.translate_sentence(self.current_sentence)
         
         return (
             self.current_sentence,
-            f"English: {self.current_word.get('english', '')}",
-            f"Spanish: {self.current_word.get('spanish', '')}",          
+            self.current_translation,
+            self.current_word.get('english', ''),
+            self.current_word.get('spanish', ''),          
         )
 
-    def grade_submission(self, image):
-        """Process image submission and grade it using MangaOCR and LLM"""
+    def preprocess_image(self, image_path):
+        """Preprocess the image to improve OCR accuracy"""
         try:
-            # Initialize MangaOCR for transcription if not already initialized
-            if self.mocr is None:
-                logger.info("Initializing MangaOCR")
-                from manga_ocr import MangaOcr
-                self.mocr = MangaOcr()
+            # Read the image
+            img = cv2.imread(image_path)
             
-            # Transcribe the image
-            logger.info("Transcribing image with MangaOCR")
-            transcription = self.mocr(image)
+            # Convert to grayscale
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            
+            # Apply thresholding to get a binary image
+            _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
+            
+            # Apply dilation to make text more visible
+            kernel = np.ones((1, 1), np.uint8)
+            dilated = cv2.dilate(binary, kernel, iterations=1)
+            
+            # Invert back
+            preprocessed = cv2.bitwise_not(dilated)
+            
+            # Save the preprocessed image temporarily
+            temp_path = "temp_preprocessed.png"
+            cv2.imwrite(temp_path, preprocessed)
+            
+            return temp_path
+        except Exception as e:
+            logger.error(f"Error preprocessing image: {str(e)}")
+            return image_path
+
+    def grade_submission(self, image):
+        """Process image submission and grade it using Tesseract OCR and LLM"""
+        try:
+            # Preprocess the image to improve OCR accuracy
+            logger.info("Preprocessing image for OCR")
+            preprocessed_image_path = self.preprocess_image(image)
+            
+            # Use Tesseract to extract text from the image
+            logger.info("Transcribing image with Tesseract OCR")
+            transcription = pytesseract.image_to_string(
+                Image.open(preprocessed_image_path), 
+                config=self.tesseract_config
+            )
+            transcription = transcription.strip()
             logger.debug(f"Transcription result: {transcription}")
+            
+            # Clean up temporary file if it was created
+            if preprocessed_image_path != image and os.path.exists(preprocessed_image_path):
+                os.remove(preprocessed_image_path)
             
             # Load prompts
             prompts = load_prompts()
@@ -165,37 +235,114 @@ class SpanishWritingApp:
 def create_ui():
     app = SpanishWritingApp()
     
-    # Custom CSS for larger text
+    # Custom CSS for larger text and font fixes
     custom_css = """
-    .large-text-output textarea {
-        font-size: 40px !important;
+    /* Fix font issues by using system fonts */
+    * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+    }
+    
+    /* Reduce Spanish sentence font size to 2/3 of original */
+    .spanish-text-output textarea {
+        font-size: 26px !important;
         line-height: 1.5 !important;
-        font-family: 'Noto Sans JP', sans-serif !important;
+    }
+    
+    /* Style for English translation to match */
+    .english-text-output textarea {
+        font-size: 26px !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Transcription output styling */
+    .transcription-output textarea {
+        font-size: 26px !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Hide manifest error in console by disabling the request */
+    @media (display-mode: browser) {
+        html {
+            --pwa-manifest: none;
+        }
+    }
+    
+    /* Style for hint button */
+    .hint-button {
+        margin-left: 10px;
     }
     """
     
     with gr.Blocks(
         title="Spanish Writing Practice",
-        css=custom_css
+        css=custom_css,
+        head="""
+        <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlNwYW5pc2ggV3JpdGluZyBQcmFjdGljZSIsCiAgInNob3J0X25hbWUiOiAiU3BhbmlzaEFwcCIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzRhOTBlMiIsCiAgImljb25zIjogW10KfQ==">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+        @font-face {
+            font-family: 'ui-sans-serif';
+            src: local('Arial'), local('Helvetica'), local('San Francisco'), local('Segoe UI');
+            font-weight: normal;
+            font-style: normal;
+        }
+        </style>
+        """
     ) as interface:
         gr.Markdown("# Spanish Writing Practice")
+        
+        # Store the current translation and word
+        current_translation = gr.State("")
+        current_english_word = gr.State("")
         
         with gr.Row():
             with gr.Column():
                 generate_btn = gr.Button("Generate New Sentence", variant="primary")
-                # Make sentence output more prominent with larger text and more lines
-                sentence_output = gr.Textbox(
-                    label="Generated Sentence",
+                
+                # Spanish sentence output
+                gr.Markdown("### Sentence to Practice")
+                spanish_sentence_output = gr.Textbox(
+                    label="Spanish",
                     lines=3,
-                    scale=2,  # Make the component larger
+                    scale=2,
                     show_label=True,
                     container=True,
-                    # Add custom CSS for larger text
-                    elem_classes=["large-text-output"]
+                    elem_classes=["spanish-text-output"]
                 )
-                word_info = gr.Markdown("### Word Information")
-                english_output = gr.Textbox(label="English", interactive=False)
-                spanish_output = gr.Textbox(label="Spanish", interactive=False)                
+                
+                # English translation section with hint button
+                with gr.Row():
+                    gr.Markdown("### English")
+                    show_english_btn = gr.Button("Show", size="sm", elem_classes=["hint-button"])
+                
+                # Initially hidden English translation
+                english_translation_output = gr.Textbox(
+                    label="",
+                    lines=3,
+                    scale=2,
+                    show_label=False,
+                    container=True,
+                    elem_classes=["english-text-output"],
+                    visible=False
+                )
+                
+                # Word information section
+                gr.Markdown("### Word Information")
+                
+                # Spanish word output
+                spanish_word_output = gr.Textbox(label="Spanish", interactive=False)
+                
+                # English word section with hint button
+                with gr.Row():
+                    gr.Markdown("#### English")
+                    show_english_word_btn = gr.Button("Show", size="sm", elem_classes=["hint-button"])
+                
+                # Initially hidden English word
+                english_word_output = gr.Textbox(
+                    label="",
+                    interactive=False,
+                    visible=False
+                )
             
             with gr.Column():
                 image_input = gr.Image(label="Upload your handwritten sentence", type="filepath")
@@ -209,7 +356,7 @@ def create_ui():
                         scale=2,
                         show_label=True,
                         container=True,
-                        elem_classes=["large-text-output"]
+                        elem_classes=["transcription-output"]
                     )
                     translation_output = gr.Textbox(label="Translation", lines=2)
                     grade_output = gr.Textbox(label="Grade")
@@ -218,13 +365,21 @@ def create_ui():
         # Event handlers
         def handle_generate_click():
             logger.debug("Generate button clicked")
-            result = app.get_random_word_and_sentence()
+            spanish, english_trans, english_word, spanish_word = app.get_random_word_and_sentence()
             logger.debug("Finished processing generate button click")
-            return result
+            # Hide the English text when generating a new sentence
+            return [spanish, spanish_word, gr.update(visible=False), gr.update(visible=False), english_trans, english_word]
 
         generate_btn.click(
             fn=handle_generate_click,
-            outputs=[sentence_output, english_output, spanish_output]
+            outputs=[
+                spanish_sentence_output, 
+                spanish_word_output,
+                english_translation_output,
+                english_word_output,
+                current_translation,
+                current_english_word
+            ]
         )
         
         def handle_submission(image):
@@ -235,9 +390,30 @@ def create_ui():
             inputs=[image_input],
             outputs=[transcription_output, translation_output, grade_output, feedback_output]
         )
+        
+        # Show/hide English translation
+        def show_english_translation(translation):
+            return gr.update(value=translation, visible=True)
+        
+        show_english_btn.click(
+            fn=show_english_translation,
+            inputs=[current_translation],
+            outputs=[english_translation_output]
+        )
+        
+        # Show/hide English word
+        def show_english_word(word):
+            return gr.update(value=word, visible=True)
+        
+        show_english_word_btn.click(
+            fn=show_english_word,
+            inputs=[current_english_word],
+            outputs=[english_word_output]
+        )
 
     return interface
 
 if __name__ == "__main__":
     interface = create_ui()
+    # Launch the app
     interface.launch(server_name="0.0.0.0", server_port=8501)
